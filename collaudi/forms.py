@@ -12,6 +12,7 @@ class ProjectForm(forms.ModelForm):
 
 class FiberTestForm(forms.ModelForm):
     test_datetime = forms.DateTimeField(
+        label='Data e ora del test',
         widget=forms.DateTimeInput(attrs={'type': 'datetime-local'}),
     )
 

@@ -90,6 +90,23 @@ class FiberTestUpdateView(LoginRequiredMixin, UpdateView):
         context['project'] = self.object.project
         return context
 
+    def form_valid(self, form):
+        response = super().form_valid(form)
+        # Se il tipo di fibra è cambiato, le lunghezze d'onda valide possono
+        # essere diverse: allinea le righe di misura (senza perdere i valori
+        # già inseriti per le lunghezze d'onda ancora valide).
+        valid_wavelengths = set(self.object.wavelengths())
+        measurements = self.object.measurements.all()
+        existing_pairs = {(m.wavelength_nm, m.direction) for m in measurements}
+        measurements.exclude(wavelength_nm__in=valid_wavelengths).delete()
+        for wavelength in valid_wavelengths:
+            for direction, _ in FiberMeasurement.DIRECTION_CHOICES:
+                if (wavelength, direction) not in existing_pairs:
+                    FiberMeasurement.objects.create(
+                        fiber_test=self.object, wavelength_nm=wavelength, direction=direction,
+                    )
+        return response
+
     def get_success_url(self):
         return reverse('project-detail', args=[self.object.project_id])
 

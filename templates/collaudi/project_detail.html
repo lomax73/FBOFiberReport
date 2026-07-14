@@ -42,7 +42,10 @@
                 {{ test.test_datetime }}
             </div>
         </div>
-        <a class="btn btn-secondary" href="{% url 'fibertest-measurements' test.pk %}">Misure</a>
+        <div style="display:flex; gap:0.5rem;">
+            <a class="btn btn-secondary" href="{% url 'fibertest-update' test.pk %}">Modifica</a>
+            <a class="btn btn-secondary" href="{% url 'fibertest-measurements' test.pk %}">Misure</a>
+        </div>
     </div>
 
     {% with measurements=test.measurements.all %}

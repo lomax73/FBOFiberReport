@@ -37,7 +37,7 @@ class FiberTest(models.Model):
     end_point = models.CharField('Punto di arrivo', max_length=200)
     fiber_type = models.CharField('Tipo di fibra', max_length=20, choices=services.fiber_type_choices())
     length_value = models.DecimalField('Lunghezza tratta', max_digits=10, decimal_places=3)
-    length_unit = models.CharField(max_length=2, choices=LENGTH_UNIT_CHOICES, default='km')
+    length_unit = models.CharField('Unità di lunghezza', max_length=2, choices=LENGTH_UNIT_CHOICES, default='km')
     splice_type = models.CharField('Tipo di giunzione', max_length=20, choices=services.splice_type_choices())
     splice_count = models.PositiveIntegerField('Numero giunzioni', default=0)
     connector_type = models.CharField('Tipo di connettori', max_length=20, choices=services.connector_type_choices())
