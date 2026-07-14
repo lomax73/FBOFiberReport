@@ -1,0 +1,15 @@
+{% extends "base.html" %}
+
+{% block title %}Progetto — Collaudi Fibra{% endblock %}
+
+{% block content %}
+<h1>{% if object %}Modifica progetto{% else %}Nuovo progetto{% endif %}</h1>
+<div class="card">
+    <form method="post" enctype="multipart/form-data">
+        {% csrf_token %}
+        {{ form.as_p }}
+        <button class="btn" type="submit">Salva</button>
+        {% if object %}<a class="btn btn-secondary" href="{% url 'project-detail' object.pk %}">Annulla</a>{% endif %}
+    </form>
+</div>
+{% endblock %}

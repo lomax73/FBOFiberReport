@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+
+{% block title %}Progetti — Collaudi Fibra{% endblock %}
+
+{% block content %}
+<div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:1.5rem;">
+    <h1>Progetti</h1>
+    <a class="btn" href="{% url 'project-create' %}">+ Nuovo progetto</a>
+</div>
+
+{% if projects %}
+<table>
+    <thead>
+        <tr><th>Cantiere</th><th>Indirizzo</th><th>Tratte</th><th></th></tr>
+    </thead>
+    <tbody>
+        {% for project in projects %}
+        <tr>
+            <td><a href="{% url 'project-detail' project.pk %}">{{ project.name }}</a></td>
+            <td>{{ project.address }}</td>
+            <td>{{ project.fiber_tests.count }}</td>
+            <td><a href="{% url 'project-update' project.pk %}">Modifica</a></td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% else %}
+<p>Nessun progetto ancora. <a href="{% url 'project-create' %}">Creane uno</a>.</p>
+{% endif %}
+{% endblock %}

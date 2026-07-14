@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<title>Report collaudo — {{ project.name }}</title>
+<style>
+    @page { size: A4; margin: 2cm 1.8cm; }
+    * { box-sizing: border-box; }
+    body {
+        font-family: 'Helvetica', 'Arial', sans-serif;
+        color: #1f2937;
+        font-size: 10.5pt;
+        margin: 0;
+    }
+    .header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        border-bottom: 2px solid #123247;
+        padding-bottom: 10pt;
+        margin-bottom: 14pt;
+    }
+    .header img { max-height: 48pt; max-width: 160pt; }
+    .header .meta { text-align: right; font-size: 9pt; color: #64748b; }
+    h1 { font-size: 16pt; color: #123247; margin: 0 0 4pt; }
+    .project-address { font-size: 10pt; color: #475569; margin: 0 0 4pt; }
+    .project-sub { font-size: 8.5pt; color: #94a3b8; margin: 0; }
+
+    .test-block {
+        margin-top: 14pt;
+        page-break-inside: avoid;
+        border: 1px solid #e2e8f0;
+        border-radius: 6pt;
+        padding: 10pt 12pt;
+    }
+    .test-title { font-size: 12pt; font-weight: bold; color: #123247; margin: 0 0 4pt; }
+    .test-meta {
+        display: grid;
+        grid-template-columns: 1fr 1fr 1fr;
+        gap: 4pt 12pt;
+        font-size: 8.5pt;
+        color: #475569;
+        margin-bottom: 8pt;
+    }
+    .test-meta strong { color: #1f2937; }
+
+    table { width: 100%; border-collapse: collapse; font-size: 9pt; }
+    th, td { text-align: left; padding: 4pt 6pt; border-bottom: 1px solid #e2e8f0; }
+    th { background: #f1f5f9; color: #64748b; text-transform: uppercase; font-size: 7.5pt; letter-spacing: 0.03em; }
+
+    .badge { display: inline-block; padding: 1pt 6pt; border-radius: 8pt; font-size: 8pt; font-weight: bold; color: #fff; }
+    .badge-ok { background: #22c55e; }
+    .badge-warn { background: #f59e0b; }
+    .badge-pending { background: #9ca3af; }
+
+    .footer { margin-top: 20pt; font-size: 7.5pt; color: #94a3b8; }
+</style>
+</head>
+<body>
+
+<div class="header">
+    <div>
+        {% if logo_uri %}<img src="{{ logo_uri }}" alt="{{ project.name }}">{% endif %}
+    </div>
+    <div class="meta">
+        Report generato il {{ now|date:"d/m/Y" }} alle {{ now|time:"H:i" }}
+    </div>
+</div>
+
+<h1>{{ project.name }}</h1>
+<p class="project-address">{{ project.address }}</p>
+<p class="project-sub">Tolleranza di plausibilità: {{ project.tolerance_percent }}%</p>
+
+{% for test in fiber_tests %}
+<div class="test-block">
+    <p class="test-title">{{ test.start_point }} &rarr; {{ test.end_point }}</p>
+    <div class="test-meta">
+        <div>Tipo fibra: <strong>{{ test.get_fiber_type_display }}</strong></div>
+        <div>Lunghezza tratta: <strong>{{ test.length_value }} {{ test.length_unit }}</strong></div>
+        <div>Data/ora test: <strong>{{ test.test_datetime|date:"d/m/Y H:i" }}</strong></div>
+        <div>Giunzioni: <strong>{{ test.get_splice_type_display }} &times; {{ test.splice_count }}</strong></div>
+        <div>Connettori: <strong>{{ test.get_connector_type_display }} &times; {{ test.connector_count }}</strong></div>
+    </div>
+
+    <table>
+        <thead>
+            <tr>
+                <th>&lambda; (nm)</th>
+                <th>Direzione</th>
+                <th>Misurato (dB)</th>
+                <th>Teorico (dB)</th>
+                <th>Esito</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for m in test.measurements.all %}
+            <tr>
+                <td>{{ m.wavelength_nm }}</td>
+                <td>{{ m.get_direction_display }}</td>
+                <td>{% if m.measured_db is not None %}{{ m.measured_db }}{% else %}&mdash;{% endif %}</td>
+                <td>{{ m.theoretical_db|floatformat:2 }}</td>
+                <td>
+                    {% if m.is_plausible is None %}
+                        <span class="badge badge-pending">In attesa</span>
+                    {% elif m.is_plausible %}
+                        <span class="badge badge-ok">Plausibile</span>
+                    {% else %}
+                        <span class="badge badge-warn">Da verificare</span>
+                    {% endif %}
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endfor %}
+
+<p class="footer">
+    Valori teorici stimati con coefficienti tipici (ITU-T G.652/G.657, IEC 60793, prassi TIA-568): a scopo di verifica
+    di plausibilità, non sostituiscono le specifiche di capitolato del progetto.
+</p>
+
+</body>
+</html>

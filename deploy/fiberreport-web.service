@@ -1,0 +1,17 @@
+[Unit]
+Description=Collaudi Fibra - Gunicorn
+After=network.target
+
+[Service]
+Type=simple
+User=fiberreport
+Group=fiberreport
+WorkingDirectory=/opt/fiberreport/app
+ExecStart=/opt/fiberreport/app/venv/bin/gunicorn fiberreport.wsgi:application \
+    --bind unix:/run/fiberreport/gunicorn.sock \
+    --workers 2
+RuntimeDirectory=fiberreport
+Restart=on-failure
+
+[Install]
+WantedBy=multi-user.target

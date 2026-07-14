@@ -1,0 +1,81 @@
+{% extends "base.html" %}
+
+{% block title %}{{ project.name }} — Collaudi Fibra{% endblock %}
+
+{% block content %}
+<div style="display:flex; align-items:flex-start; justify-content:space-between; gap:1rem; margin-bottom:1.5rem; flex-wrap:wrap;">
+    <div>
+        <h1>{{ project.name }}</h1>
+        <p style="color:#64748b; margin:0;">{{ project.address }}</p>
+    </div>
+    <div style="display:flex; gap:0.6rem; flex-wrap:wrap;">
+        <a class="btn btn-secondary" href="{% url 'project-update' project.pk %}">Modifica progetto</a>
+        <a class="btn" href="{% url 'fibertest-create' project.pk %}">+ Aggiungi tratta</a>
+        {% if fiber_tests %}
+        <a class="btn" href="{% url 'project-report-pdf' project.pk %}">Genera report PDF</a>
+        {% endif %}
+    </div>
+</div>
+
+{% if project.logo %}
+<div class="card" style="display:flex; align-items:center; gap:1rem;">
+    <img src="{{ project.logo.url }}" alt="Logo progetto" style="max-height:60px;">
+    <span style="color:#64748b; font-size:0.9rem;">Logo usato nei report di questo progetto</span>
+</div>
+{% endif %}
+
+<div class="card" style="font-size:0.9rem; color:#64748b;">
+    Tolleranza di plausibilità: <strong style="color:var(--ink);">{{ project.tolerance_percent }}%</strong>
+</div>
+
+<h2 style="margin-top:2rem;">Tratte</h2>
+{% if fiber_tests %}
+{% for test in fiber_tests %}
+<div class="card">
+    <div style="display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:0.5rem;">
+        <div>
+            <strong>{{ test.start_point }} → {{ test.end_point }}</strong>
+            <div style="font-size:0.85rem; color:#64748b;">
+                {{ test.get_fiber_type_display }} · {{ test.length_value }} {{ test.length_unit }} ·
+                {{ test.get_splice_type_display }} ({{ test.splice_count }}) ·
+                {{ test.get_connector_type_display }} ({{ test.connector_count }}) ·
+                {{ test.test_datetime }}
+            </div>
+        </div>
+        <a class="btn btn-secondary" href="{% url 'fibertest-measurements' test.pk %}">Misure</a>
+    </div>
+
+    {% with measurements=test.measurements.all %}
+    {% if measurements %}
+    <table style="margin-top:0.75rem;">
+        <thead>
+            <tr><th>λ (nm)</th><th>Direzione</th><th>Misurato (dB)</th><th>Teorico (dB)</th><th>Esito</th></tr>
+        </thead>
+        <tbody>
+            {% for m in measurements %}
+            <tr>
+                <td>{{ m.wavelength_nm }}</td>
+                <td>{{ m.get_direction_display }}</td>
+                <td>{% if m.measured_db is not None %}{{ m.measured_db }}{% else %}—{% endif %}</td>
+                <td>{{ m.theoretical_db|floatformat:2 }}</td>
+                <td>
+                    {% if m.is_plausible is None %}
+                        <span class="badge badge-in_attesa">In attesa</span>
+                    {% elif m.is_plausible %}
+                        <span class="badge badge-plausibile">Plausibile</span>
+                    {% else %}
+                        <span class="badge badge-da_verificare">Da verificare</span>
+                    {% endif %}
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% endif %}
+    {% endwith %}
+</div>
+{% endfor %}
+{% else %}
+<p>Nessuna tratta ancora. <a href="{% url 'fibertest-create' project.pk %}">Aggiungine una</a>.</p>
+{% endif %}
+{% endblock %}

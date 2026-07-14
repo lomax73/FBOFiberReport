@@ -1,0 +1,16 @@
+{% extends "base.html" %}
+
+{% block title %}Tratta — Collaudi Fibra{% endblock %}
+
+{% block content %}
+<h1>{% if object %}Modifica tratta{% else %}Nuova tratta{% endif %}</h1>
+<p style="color:#64748b; margin-top:-0.75rem;">Progetto: <a href="{% url 'project-detail' project.pk %}">{{ project.name }}</a></p>
+<div class="card">
+    <form method="post">
+        {% csrf_token %}
+        {{ form.as_p }}
+        <button class="btn" type="submit">Salva{% if not object %} e inserisci misure{% endif %}</button>
+        <a class="btn btn-secondary" href="{% url 'project-detail' project.pk %}">Annulla</a>
+    </form>
+</div>
+{% endblock %}
