@@ -48,6 +48,32 @@ Ricorda anche: `chmod 751 /opt/fiberreport` (come per `/opt/portal`) perché
 Nginx/www-data possa attraversare la home e servire `staticfiles/` e
 `media/` (i loghi caricati).
 
+## API interna di gestione utenti (per il Portale)
+
+Come per MKRemote, questa app espone `accounts/` sotto `api/internal/`
+per permettere al Portale FBO di creare/modificare/eliminare utenti da
+remoto. **Va esposta solo in locale**, mai pubblicamente:
+
+1. Aggiungere `INTERNAL_API_TOKEN` a `.env` (vedi `.env.example`):
+   ```
+   python -c "import secrets; print(secrets.token_urlsafe(32))"
+   ```
+2. Aggiungere al vhost Nginx (`nginx-fiberreport-ip-provisional.conf` o
+   quello a dominio) un location block dedicato **prima** di quello
+   generico `location /`, con l'accesso limitato a localhost:
+   ```nginx
+   location /api/internal/ {
+       allow 127.0.0.1;
+       deny all;
+       proxy_pass http://unix:/run/fiberreport/gunicorn.sock;
+       proxy_set_header Host $http_host;
+   }
+   ```
+3. `systemctl restart fiberreport-web.service` dopo aver aggiornato `.env`.
+4. Configurare lo stesso token nel Portale (admin → AppLink di Collaudi
+   Fibra → campo "API token"), insieme a `internal_base_url =
+   https://127.0.0.1:8444`.
+
 ## Deploy di un aggiornamento
 
 ```

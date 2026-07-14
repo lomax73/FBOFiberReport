@@ -21,6 +21,12 @@ DEBUG = os.environ.get('DJANGO_DEBUG', 'true').lower() == 'true'
 
 ALLOWED_HOSTS = [h for h in os.environ.get('DJANGO_ALLOWED_HOSTS', 'localhost,127.0.0.1').split(',') if h]
 
+# Token condiviso per la API interna di gestione utenti (accounts/), usata
+# dal Portale per creare/modificare/eliminare account da remoto. L'endpoint
+# è raggiungibile solo da localhost (regola Nginx), il token è una difesa
+# aggiuntiva. Generarlo con: python -c "import secrets; print(secrets.token_urlsafe(32))"
+INTERNAL_API_TOKEN = os.environ.get('INTERNAL_API_TOKEN', '')
+
 
 # Application definition
 
@@ -32,6 +38,7 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'collaudi',
+    'accounts',
 ]
 
 MIDDLEWARE = [
