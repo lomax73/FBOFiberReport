@@ -7,12 +7,21 @@ from django.template.loader import render_to_string
 from django.urls import reverse
 from django.utils import timezone
 from django.utils.text import slugify
-from django.views.generic import CreateView, DetailView, ListView, UpdateView
+from django.views.generic import CreateView, DetailView, ListView, TemplateView, UpdateView
 from weasyprint import HTML
 
 from . import services
 from .forms import FiberMeasurementFormSet, FiberTestForm, ProjectForm
 from .models import FiberMeasurement, FiberTest, Project
+
+
+class CalculatorView(LoginRequiredMixin, TemplateView):
+    template_name = 'collaudi/calculator.html'
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['coefficients'] = services.coefficients_for_calculator()
+        return context
 
 
 class ProjectListView(LoginRequiredMixin, ListView):

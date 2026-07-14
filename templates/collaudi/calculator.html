@@ -1,0 +1,290 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Calcolatore teorico — Collaudi Fibra{% endblock %}
+
+{% block extra_head %}
+<style>
+    .calc-grid {
+        display: grid;
+        grid-template-columns: 1.15fr 1fr;
+        gap: 18px;
+        align-items: start;
+    }
+    @media (max-width: 820px) { .calc-grid { grid-template-columns: 1fr; } }
+
+    .calc-section-title {
+        font-family: var(--font-mono);
+        font-size: 11px;
+        letter-spacing: .1em;
+        text-transform: uppercase;
+        color: #94a3b8;
+        margin: 0 0 14px;
+        padding-bottom: 10px;
+        border-bottom: 1px solid var(--border);
+    }
+    .calc-section-title span { color: var(--azure); }
+    .calc-field { margin-bottom: 16px; }
+    .calc-field:last-child { margin-bottom: 0; }
+    .calc-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+    .calc-row3 { display: grid; grid-template-columns: 1fr 0.8fr 0.8fr; gap: 10px; }
+    @media (max-width: 480px) { .calc-row3 { grid-template-columns: 1fr; } }
+
+    .calc-unit-suffix { position: relative; }
+    .calc-unit-suffix::after {
+        content: attr(data-unit);
+        position: absolute; right: 12px; top: 50%; transform: translateY(-50%);
+        font-family: var(--font-mono); font-size: 11.5px; color: #94a3b8; pointer-events: none;
+    }
+    .calc-hint { font-size: 11.5px; color: #94a3b8; margin-top: 6px; line-height: 1.4; }
+
+    .calc-display {
+        background: var(--navy); border-radius: 12px; padding: 22px 20px 20px;
+        text-align: center; margin-bottom: 16px;
+    }
+    .calc-display-label {
+        font-family: var(--font-mono); font-size: 10.5px; letter-spacing: .14em;
+        text-transform: uppercase; color: #9fc2d6; margin-bottom: 10px;
+    }
+    .calc-display-value {
+        font-family: var(--font-mono); font-size: 44px; font-weight: 700; color: var(--azure); line-height: 1;
+    }
+    .calc-display-value .unit { font-size: 18px; color: #cbd8e2; margin-left: 6px; }
+    .calc-display-note { margin-top: 10px; font-size: 11.5px; color: #9fc2d6; font-family: var(--font-mono); }
+
+    .calc-breakdown { display: flex; flex-direction: column; }
+    .calc-b-row {
+        display: flex; justify-content: space-between; align-items: baseline;
+        padding: 9px 0; border-bottom: 1px dashed var(--border); font-size: 13px;
+    }
+    .calc-b-row:last-child { border-bottom: none; }
+    .calc-b-label { color: #64748b; }
+    .calc-b-sub { display: block; font-size: 10.5px; color: #94a3b8; font-family: var(--font-mono); margin-top: 2px; }
+    .calc-b-value { font-family: var(--font-mono); font-weight: 600; white-space: nowrap; }
+
+    .calc-footnote { margin-top: 18px; font-size: 11.5px; line-height: 1.6; color: #94a3b8; }
+</style>
+{% endblock %}
+
+{% block content %}
+<h1>Calcolatore teorico</h1>
+<p style="color:#64748b; margin-top:-0.75rem; max-width:60ch;">
+    Stessi coefficienti usati per la verifica di plausibilità dei progetti: inserisci fibra, lunghezza,
+    giunzioni e connettori per stimare l'attenuazione ottica attesa, voce per voce — senza dover creare
+    un progetto.
+</p>
+
+{{ coefficients|json_script:"coefficients-data" }}
+
+<div class="calc-grid">
+    <div class="card">
+        <div class="calc-section-title"><span>01</span> Tratta in fibra</div>
+        <div class="calc-field">
+            <label for="calcFiberType">Tipo di fibra</label>
+            <select id="calcFiberType"></select>
+        </div>
+        <div class="calc-row">
+            <div class="calc-field">
+                <label for="calcWavelength">Lunghezza d'onda</label>
+                <select id="calcWavelength"></select>
+            </div>
+            <div class="calc-field">
+                <label for="calcFiberCoeff">Coeff. attenuazione</label>
+                <div class="calc-unit-suffix" data-unit="dB/km">
+                    <input type="number" id="calcFiberCoeff" step="0.01" min="0">
+                </div>
+            </div>
+        </div>
+        <div class="calc-field">
+            <label for="calcLength">Lunghezza tratta</label>
+            <div class="calc-row" style="grid-template-columns:1fr 96px;">
+                <input type="number" id="calcLength" step="0.01" min="0" value="1">
+                <select id="calcLengthUnit">
+                    <option value="km">km</option>
+                    <option value="m">m</option>
+                </select>
+            </div>
+        </div>
+
+        <div class="calc-section-title" style="margin-top:22px;"><span>02</span> Giunzioni</div>
+        <div class="calc-row3">
+            <div class="calc-field">
+                <label for="calcSpliceType">Tipo giunzione</label>
+                <select id="calcSpliceType"></select>
+            </div>
+            <div class="calc-field">
+                <label for="calcSpliceLoss">Perdita cad.</label>
+                <div class="calc-unit-suffix" data-unit="dB">
+                    <input type="number" id="calcSpliceLoss" step="0.01" min="0">
+                </div>
+            </div>
+            <div class="calc-field">
+                <label for="calcSpliceCount">Quantità</label>
+                <input type="number" id="calcSpliceCount" step="1" min="0" value="0">
+            </div>
+        </div>
+
+        <div class="calc-section-title" style="margin-top:22px;"><span>03</span> Connettori</div>
+        <div class="calc-row3">
+            <div class="calc-field">
+                <label for="calcConnType">Tipo connettore</label>
+                <select id="calcConnType"></select>
+            </div>
+            <div class="calc-field">
+                <label for="calcConnLoss">Perdita cad.</label>
+                <div class="calc-unit-suffix" data-unit="dB">
+                    <input type="number" id="calcConnLoss" step="0.01" min="0">
+                </div>
+            </div>
+            <div class="calc-field">
+                <label for="calcConnCount">Quantità</label>
+                <input type="number" id="calcConnCount" step="1" min="0" value="0">
+            </div>
+        </div>
+
+        <div class="calc-section-title" style="margin-top:22px;"><span>04</span> Margine</div>
+        <div class="calc-field" style="margin-bottom:0;">
+            <label for="calcMargin">Margine di sicurezza aggiuntivo</label>
+            <div class="calc-unit-suffix" data-unit="dB">
+                <input type="number" id="calcMargin" step="0.1" min="0" value="0">
+            </div>
+            <div class="calc-hint">Facoltativo: alcuni capitolati richiedono 1–3 dB extra per invecchiamento cavo, riparazioni future o tolleranza strumenti.</div>
+        </div>
+    </div>
+
+    <div class="readout">
+        <div class="card calc-display">
+            <div class="calc-display-label">Attenuazione totale stimata</div>
+            <div class="calc-display-value"><span id="calcTotalValue">0.00</span><span class="unit">dB</span></div>
+            <div class="calc-display-note" id="calcLengthEcho">—</div>
+        </div>
+        <div class="card">
+            <div class="calc-section-title">Dettaglio</div>
+            <div class="calc-breakdown" id="calcBreakdown"></div>
+        </div>
+        <div class="calc-footnote">
+            <strong>Nota:</strong> coefficienti tipici (ITU-T G.652/G.657, IEC 60793, prassi TIA-568) per una
+            stima di massima — gli stessi usati per marcare "da verificare" le misure dei progetti. Verifica
+            sempre con il capitolato e con la misura reale OTDR/power meter.
+        </div>
+    </div>
+</div>
+
+<script>
+(function () {
+    const coeff = JSON.parse(document.getElementById('coefficients-data').textContent);
+    const $ = (id) => document.getElementById(id);
+
+    function populateSelect(sel, data) {
+        sel.innerHTML = '';
+        Object.entries(data).forEach(([key, val]) => {
+            const opt = document.createElement('option');
+            opt.value = key;
+            opt.textContent = val.label;
+            sel.appendChild(opt);
+        });
+    }
+
+    function populateWavelengths() {
+        const fiber = coeff.fiberData[$('calcFiberType').value];
+        const sel = $('calcWavelength');
+        sel.innerHTML = '';
+        Object.keys(fiber.wavelengths).forEach((wl) => {
+            const opt = document.createElement('option');
+            opt.value = wl;
+            opt.textContent = wl + ' nm';
+            sel.appendChild(opt);
+        });
+        applyFiberCoeff();
+    }
+
+    function applyFiberCoeff() {
+        const fiber = coeff.fiberData[$('calcFiberType').value];
+        const wl = $('calcWavelength').value;
+        $('calcFiberCoeff').value = fiber.wavelengths[wl];
+        calc();
+    }
+
+    function applySpliceLoss() {
+        $('calcSpliceLoss').value = coeff.spliceData[$('calcSpliceType').value].loss;
+        calc();
+    }
+
+    function applyConnLoss() {
+        $('calcConnLoss').value = coeff.connData[$('calcConnType').value].loss;
+        calc();
+    }
+
+    function fmt(n) { return (Math.round(n * 100) / 100).toFixed(2); }
+    function lengthToKm(value, unit) { return unit === 'm' ? value / 1000 : value; }
+
+    function calc() {
+        const length = parseFloat($('calcLength').value) || 0;
+        const lengthUnit = $('calcLengthUnit').value;
+        const lengthKm = lengthToKm(length, lengthUnit);
+        const fiberCoeff = parseFloat($('calcFiberCoeff').value) || 0;
+        const spliceCount = parseFloat($('calcSpliceCount').value) || 0;
+        const spliceLoss = parseFloat($('calcSpliceLoss').value) || 0;
+        const connCount = parseFloat($('calcConnCount').value) || 0;
+        const connLoss = parseFloat($('calcConnLoss').value) || 0;
+        const margin = parseFloat($('calcMargin').value) || 0;
+
+        const fiberTotal = lengthKm * fiberCoeff;
+        const spliceTotal = spliceCount * spliceLoss;
+        const connTotal = connCount * connLoss;
+        const total = fiberTotal + spliceTotal + connTotal + margin;
+
+        $('calcTotalValue').textContent = fmt(total);
+        $('calcLengthEcho').textContent = `${fmt(length)} ${lengthUnit} · ${spliceCount} giunzioni · ${connCount} connettori`;
+
+        const rows = [
+            { label: 'Fibra ottica', sub: `${fmt(length)} ${lengthUnit} × ${fmt(fiberCoeff)} dB/km`, value: fmt(fiberTotal) },
+            { label: 'Giunzioni', sub: `${spliceCount} × ${fmt(spliceLoss)} dB`, value: fmt(spliceTotal) },
+            { label: 'Connettori', sub: `${connCount} × ${fmt(connLoss)} dB`, value: fmt(connTotal) },
+            { label: 'Margine di sicurezza', sub: null, value: fmt(margin) },
+        ];
+        $('calcBreakdown').innerHTML = rows.map(r => `
+            <div class="calc-b-row">
+                <span class="calc-b-label">${r.label}${r.sub ? `<span class="calc-b-sub">${r.sub}</span>` : ''}</span>
+                <span class="calc-b-value">${r.value} dB</span>
+            </div>
+        `).join('') + `
+            <div class="calc-b-row" style="border-top:1px solid var(--border); margin-top:6px; padding-top:12px;">
+                <span class="calc-b-label" style="color:var(--ink); font-weight:700;">Totale</span>
+                <span class="calc-b-value" style="color:var(--azure-dark); font-size:15px;">${fmt(total)} dB</span>
+            </div>
+        `;
+    }
+
+    populateSelect($('calcFiberType'), coeff.fiberData);
+    populateSelect($('calcSpliceType'), coeff.spliceData);
+    populateSelect($('calcConnType'), coeff.connData);
+
+    $('calcFiberType').addEventListener('change', populateWavelengths);
+    $('calcWavelength').addEventListener('change', applyFiberCoeff);
+    $('calcSpliceType').addEventListener('change', applySpliceLoss);
+    $('calcConnType').addEventListener('change', applyConnLoss);
+    ['calcFiberCoeff', 'calcLength', 'calcSpliceLoss', 'calcSpliceCount', 'calcConnLoss', 'calcConnCount', 'calcMargin']
+        .forEach(id => $(id).addEventListener('input', calc));
+
+    $('calcLengthUnit').addEventListener('change', (e) => {
+        const newUnit = e.target.value;
+        const current = parseFloat($('calcLength').value) || 0;
+        const lengthInput = $('calcLength');
+        if (newUnit === 'm') {
+            lengthInput.value = fmt(current * 1000).replace(/\.00$/, '');
+            lengthInput.step = '1';
+        } else {
+            lengthInput.value = fmt(current / 1000);
+            lengthInput.step = '0.01';
+        }
+        calc();
+    });
+
+    populateWavelengths();
+    applySpliceLoss();
+    applyConnLoss();
+    calc();
+})();
+</script>
+{% endblock %}

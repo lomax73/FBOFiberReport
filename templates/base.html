@@ -118,6 +118,7 @@
     {% if user.is_authenticated %}
     <nav>
         <a href="{% url 'project-list' %}">Progetti</a>
+        <a href="{% url 'calculator' %}">Calcolatore</a>
     </nav>
     <div class="user-box">
         <span>{{ user.username }}</span>

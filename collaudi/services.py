@@ -81,3 +81,26 @@ def theoretical_attenuation_db(fiber_test, wavelength_nm):
 
 def plausibility_threshold_db(theoretical_db, tolerance_percent):
     return theoretical_db * (Decimal('1') + tolerance_percent / Decimal('100'))
+
+
+def coefficients_for_calculator():
+    """Le stesse tabelle sopra, in una forma JSON-friendly (float invece di
+    Decimal) per alimentare il calcolatore lato client — un'unica fonte di
+    verità condivisa con la verifica di plausibilità server-side."""
+    return {
+        'fiberData': {
+            key: {
+                'label': val['label'],
+                'wavelengths': {str(wl): float(coeff) for wl, coeff in val['wavelengths'].items()},
+            }
+            for key, val in FIBER_TYPES.items()
+        },
+        'spliceData': {
+            key: {'label': val['label'], 'loss': float(val['loss'])}
+            for key, val in SPLICE_TYPES.items()
+        },
+        'connData': {
+            key: {'label': val['label'], 'loss': float(val['loss'])}
+            for key, val in CONNECTOR_TYPES.items()
+        },
+    }

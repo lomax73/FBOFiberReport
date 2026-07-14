@@ -5,7 +5,10 @@
 {% block content %}
 <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:1.5rem;">
     <h1>Progetti</h1>
-    <a class="btn" href="{% url 'project-create' %}">+ Nuovo progetto</a>
+    <div style="display:flex; gap:0.6rem;">
+        <a class="btn btn-secondary" href="{% url 'calculator' %}">Calcolatore teorico</a>
+        <a class="btn" href="{% url 'project-create' %}">+ Nuovo progetto</a>
+    </div>
 </div>
 
 {% if projects %}
