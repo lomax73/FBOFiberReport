@@ -1,4 +1,5 @@
 from decimal import Decimal
+from pathlib import Path
 
 from django.db import models
 from django.urls import reverse
@@ -99,6 +100,7 @@ class FiberStrand(models.Model):
     direction_mode = models.CharField(
         'Direzioni da testare', max_length=10, choices=DIRECTION_MODE_CHOICES, default='both',
     )
+    image = models.ImageField('Immagine', upload_to='strand_images/', blank=True)
 
     class Meta:
         ordering = ['number']
@@ -106,6 +108,14 @@ class FiberStrand(models.Model):
 
     def __str__(self):
         return f'{self.fiber_test} · fibra {self.number}'
+
+    @property
+    def image_uri(self):
+        """URI file:// per l'uso nel report PDF (WeasyPrint), non l'URL
+        pubblico servito da Django."""
+        if not self.image:
+            return None
+        return Path(self.image.path).as_uri()
 
     def directions(self):
         if self.direction_mode == 'a_to_b':

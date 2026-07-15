@@ -51,6 +51,12 @@
         color: #64748b;
         margin: 10pt 0 3pt;
     }
+    .strand-image {
+        max-height: 90pt;
+        max-width: 200pt;
+        border-radius: 4pt;
+        margin-bottom: 4pt;
+    }
 
     table { width: 100%; border-collapse: collapse; font-size: 9pt; }
     th, td { text-align: left; padding: 4pt 6pt; border-bottom: 1px solid #e2e8f0; }
@@ -97,6 +103,7 @@
         Fibra {{ strand.number }}{% if strand.panel_position %} &middot; posizione {{ strand.panel_position }}{% endif %}
         &middot; {{ strand.get_direction_mode_display }}
     </p>
+    {% if strand.image_uri %}<img src="{{ strand.image_uri }}" class="strand-image" alt="Immagine fibra {{ strand.number }}">{% endif %}
     <table>
         <thead>
             <tr>

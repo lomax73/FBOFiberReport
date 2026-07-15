@@ -101,7 +101,7 @@ def strand_update(request, pk):
     strand = get_object_or_404(FiberStrand, pk=pk)
     fiber_test = strand.fiber_test
     if request.method == 'POST':
-        form = FiberStrandForm(request.POST, instance=strand)
+        form = FiberStrandForm(request.POST, request.FILES, instance=strand)
         if form.is_valid():
             form.save()
             strand.sync_measurements(fiber_test.selected_wavelengths)

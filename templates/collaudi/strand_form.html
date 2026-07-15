@@ -8,8 +8,13 @@
     Tratta: {{ fiber_test.start_point }} → {{ fiber_test.end_point }} ·
     Progetto: <a href="{% url 'project-detail' project.pk %}">{{ project.name }}</a>
 </p>
+{% if strand.image %}
+<div class="card" style="display:flex; align-items:center; gap:1rem;">
+    <img src="{{ strand.image.url }}" alt="Immagine fibra {{ strand.number }}" style="max-height:160px; border-radius:8px;">
+</div>
+{% endif %}
 <div class="card">
-    <form method="post">
+    <form method="post" enctype="multipart/form-data">
         {% csrf_token %}
         {{ form.as_p }}
         <button class="btn" type="submit">Salva</button>

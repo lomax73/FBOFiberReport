@@ -56,6 +56,9 @@
     <h3 style="font-size:0.85rem; text-transform:uppercase; letter-spacing:0.04em; color:#64748b; margin:1rem 0 0.4rem;">
         Fibra {{ strand.number }}{% if strand.panel_position %} · posizione {{ strand.panel_position }}{% endif %} · {{ strand.get_direction_mode_display }}
     </h3>
+    {% if strand.image %}
+    <img src="{{ strand.image.url }}" alt="Immagine fibra {{ strand.number }}" style="max-height:100px; border-radius:8px; margin-bottom:0.4rem;">
+    {% endif %}
     <table style="margin-top:0.25rem;">
         <thead>
             <tr><th>λ (nm)</th><th>Direzione</th><th>Misurato (dB)</th><th>Teorico (dB)</th><th>Esito</th></tr>

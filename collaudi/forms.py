@@ -64,7 +64,7 @@ class FiberTestForm(forms.ModelForm):
 class FiberStrandForm(forms.ModelForm):
     class Meta:
         model = FiberStrand
-        fields = ['panel_position', 'direction_mode']
+        fields = ['panel_position', 'direction_mode', 'image']
 
 
 class FiberMeasurementForm(forms.ModelForm):
