@@ -5,6 +5,9 @@
 {% block content %}
 <h1>{% if object %}Modifica tratta{% else %}Nuova tratta{% endif %}</h1>
 <p style="color:#64748b; margin-top:-0.75rem;">Progetto: <a href="{% url 'project-detail' project.pk %}">{{ project.name }}</a></p>
+
+{{ fiber_type_wavelengths|json_script:"fiber-type-wavelengths" }}
+
 <div class="card">
     <form method="post">
         {% csrf_token %}
@@ -13,4 +16,29 @@
         <a class="btn btn-secondary" href="{% url 'project-detail' project.pk %}">Annulla</a>
     </form>
 </div>
+
+<script>
+(function () {
+    const wavelengthsByFiberType = JSON.parse(document.getElementById('fiber-type-wavelengths').textContent);
+    const fiberTypeSelect = document.getElementById('id_fiber_type');
+    const wavelengthCheckboxes = document.querySelectorAll('input[name="selected_wavelengths"]');
+
+    function updateVisibleWavelengths() {
+        const valid = (wavelengthsByFiberType[fiberTypeSelect.value] || []).map(String);
+        wavelengthCheckboxes.forEach((checkbox) => {
+            const row = checkbox.closest('li') || checkbox.closest('label') || checkbox.parentElement;
+            const isValid = valid.includes(checkbox.value);
+            row.style.display = isValid ? '' : 'none';
+            if (!isValid) {
+                checkbox.checked = false;
+            }
+        });
+    }
+
+    if (fiberTypeSelect) {
+        fiberTypeSelect.addEventListener('change', updateVisibleWavelengths);
+        updateVisibleWavelengths();
+    }
+})();
+</script>
 {% endblock %}

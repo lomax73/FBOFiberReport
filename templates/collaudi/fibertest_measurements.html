@@ -6,16 +6,18 @@
 <h1>Misure: {{ fiber_test.start_point }} → {{ fiber_test.end_point }}</h1>
 <p style="color:#64748b; margin-top:-0.75rem;">Progetto: <a href="{% url 'project-detail' project.pk %}">{{ project.name }}</a></p>
 
-<div class="card">
-    <form method="post">
-        {% csrf_token %}
-        {{ formset.management_form }}
+<form method="post">
+    {% csrf_token %}
+    {% for group in strand_groups %}
+    <div class="card">
+        <h2 style="font-size:1.1rem; margin-bottom:0.75rem;">Fibra {{ group.strand.number }}</h2>
+        {{ group.formset.management_form }}
         <table>
             <thead>
                 <tr><th>λ (nm)</th><th>Direzione</th><th>Teorico atteso (dB)</th><th>Misurato (dB)</th></tr>
             </thead>
             <tbody>
-                {% for form, measurement in rows %}
+                {% for form, measurement in group.rows %}
                 <tr>
                     <td>{{ measurement.wavelength_nm }}</td>
                     <td>{{ measurement.get_direction_display }}</td>
@@ -31,16 +33,17 @@
                 {% endfor %}
             </tbody>
         </table>
-        <div style="margin-top:1rem;">
-            <button class="btn" type="submit">Salva misure</button>
-            <a class="btn btn-secondary" href="{% url 'project-detail' project.pk %}">Torna al progetto</a>
-        </div>
-    </form>
-</div>
+    </div>
+    {% endfor %}
+    <div style="margin-top:1rem;">
+        <button class="btn" type="submit">Salva misure</button>
+        <a class="btn btn-secondary" href="{% url 'project-detail' project.pk %}">Torna al progetto</a>
+    </div>
+</form>
 
 <p class="hint" style="color:#94a3b8; font-size:0.85rem;">
-    Il valore teorico è calcolato da lunghezza tratta, tipo di fibra, giunzioni e connettori inseriti per questa tratta.
-    Con la tolleranza di plausibilità del progetto ({{ project.tolerance_percent }}%), un misurato oltre soglia viene
-    marcato "da verificare" nella scheda del progetto.
+    Il valore teorico è calcolato da lunghezza tratta, tipo di fibra, giunzioni e connettori inseriti per questa tratta
+    (uguale per tutte le fibre). Con la tolleranza di plausibilità del progetto ({{ project.tolerance_percent }}%), un
+    misurato oltre soglia viene marcato "da verificare" nella scheda del progetto.
 </p>
 {% endblock %}

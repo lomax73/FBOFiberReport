@@ -12,7 +12,7 @@ from weasyprint import HTML
 
 from . import services
 from .forms import FiberMeasurementFormSet, FiberTestForm, ProjectForm
-from .models import FiberMeasurement, FiberTest, Project
+from .models import FiberTest, Project
 
 
 class CalculatorView(LoginRequiredMixin, TemplateView):
@@ -49,7 +49,7 @@ class ProjectDetailView(LoginRequiredMixin, DetailView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context['fiber_tests'] = self.object.fiber_tests.prefetch_related('measurements')
+        context['fiber_tests'] = self.object.fiber_tests.prefetch_related('strands__measurements')
         return context
 
 
@@ -64,16 +64,13 @@ class FiberTestCreateView(LoginRequiredMixin, CreateView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context['project'] = self.get_project()
+        context['fiber_type_wavelengths'] = services.fiber_type_wavelength_map()
         return context
 
     def form_valid(self, form):
         form.instance.project = self.get_project()
         response = super().form_valid(form)
-        for wavelength in self.object.wavelengths():
-            for direction, _ in FiberMeasurement.DIRECTION_CHOICES:
-                FiberMeasurement.objects.create(
-                    fiber_test=self.object, wavelength_nm=wavelength, direction=direction,
-                )
+        self.object.sync_strands_and_measurements()
         return response
 
     def get_success_url(self):
@@ -88,23 +85,12 @@ class FiberTestUpdateView(LoginRequiredMixin, UpdateView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context['project'] = self.object.project
+        context['fiber_type_wavelengths'] = services.fiber_type_wavelength_map()
         return context
 
     def form_valid(self, form):
         response = super().form_valid(form)
-        # Se il tipo di fibra è cambiato, le lunghezze d'onda valide possono
-        # essere diverse: allinea le righe di misura (senza perdere i valori
-        # già inseriti per le lunghezze d'onda ancora valide).
-        valid_wavelengths = set(self.object.wavelengths())
-        measurements = self.object.measurements.all()
-        existing_pairs = {(m.wavelength_nm, m.direction) for m in measurements}
-        measurements.exclude(wavelength_nm__in=valid_wavelengths).delete()
-        for wavelength in valid_wavelengths:
-            for direction, _ in FiberMeasurement.DIRECTION_CHOICES:
-                if (wavelength, direction) not in existing_pairs:
-                    FiberMeasurement.objects.create(
-                        fiber_test=self.object, wavelength_nm=wavelength, direction=direction,
-                    )
+        self.object.sync_strands_and_measurements()
         return response
 
     def get_success_url(self):
@@ -113,26 +99,37 @@ class FiberTestUpdateView(LoginRequiredMixin, UpdateView):
 
 def fibertest_measurements(request, pk):
     fiber_test = get_object_or_404(FiberTest, pk=pk)
+    strands = list(fiber_test.strands.prefetch_related('measurements').all())
+
     if request.method == 'POST':
-        formset = FiberMeasurementFormSet(request.POST, instance=fiber_test)
-        if formset.is_valid():
-            formset.save()
+        formsets = [
+            FiberMeasurementFormSet(request.POST, instance=strand, prefix=f'fibra{strand.pk}')
+            for strand in strands
+        ]
+        if all(fs.is_valid() for fs in formsets):
+            for fs in formsets:
+                fs.save()
             return redirect('project-detail', pk=fiber_test.project_id)
     else:
-        formset = FiberMeasurementFormSet(instance=fiber_test)
+        formsets = [
+            FiberMeasurementFormSet(instance=strand, prefix=f'fibra{strand.pk}')
+            for strand in strands
+        ]
 
-    rows = list(zip(formset.forms, fiber_test.measurements.all()))
+    strand_groups = [
+        {'strand': strand, 'formset': fs, 'rows': list(zip(fs.forms, strand.measurements.all()))}
+        for strand, fs in zip(strands, formsets)
+    ]
     return render(request, 'collaudi/fibertest_measurements.html', {
         'project': fiber_test.project,
         'fiber_test': fiber_test,
-        'formset': formset,
-        'rows': rows,
+        'strand_groups': strand_groups,
     })
 
 
 def project_report_pdf(request, pk):
     project = get_object_or_404(Project, pk=pk)
-    fiber_tests = project.fiber_tests.prefetch_related('measurements')
+    fiber_tests = project.fiber_tests.prefetch_related('strands__measurements')
     logo_uri = Path(project.logo.path).as_uri() if project.logo else None
     html_string = render_to_string('collaudi/report_pdf.html', {
         'project': project,

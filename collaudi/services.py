@@ -62,6 +62,19 @@ def wavelengths_for_fiber_type(fiber_type):
     return sorted(FIBER_TYPES[fiber_type]['wavelengths'].keys())
 
 
+def all_wavelength_choices():
+    """Unione di tutte le lunghezze d'onda di tutti i tipi di fibra, per le
+    scelte del form (poi filtrate lato client/server in base al fiber_type
+    scelto)."""
+    all_wavelengths = sorted({wl for val in FIBER_TYPES.values() for wl in val['wavelengths']})
+    return [(str(wl), f'{wl} nm') for wl in all_wavelengths]
+
+
+def fiber_type_wavelength_map():
+    """Per il JS del form tratta: fiber_type -> lista di lunghezze d'onda valide."""
+    return {key: sorted(val['wavelengths'].keys()) for key, val in FIBER_TYPES.items()}
+
+
 def default_splice_loss(splice_type):
     return SPLICE_TYPES[splice_type]['loss']
 

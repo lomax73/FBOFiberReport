@@ -43,6 +43,8 @@ class FiberTest(models.Model):
     connector_type = models.CharField('Tipo di connettori', max_length=20, choices=services.connector_type_choices())
     connector_count = models.PositiveIntegerField('Numero connettori', default=0)
     test_datetime = models.DateTimeField('Data e ora del test')
+    fiber_count = models.PositiveIntegerField('Numero di fibre', default=1)
+    selected_wavelengths = models.JSONField("Lunghezze d'onda da testare", default=list)
 
     class Meta:
         ordering = ['start_point', 'end_point']
@@ -60,13 +62,53 @@ class FiberTest(models.Model):
         return services.theoretical_attenuation_db(self, wavelength_nm)
 
     def wavelengths(self):
+        """Lunghezze d'onda valide per il tipo di fibra (non quelle scelte)."""
         return services.wavelengths_for_fiber_type(self.fiber_type)
+
+    def sync_strands_and_measurements(self):
+        """Allinea FiberStrand e FiberMeasurement a fiber_count e
+        selected_wavelengths correnti. Da chiamare dopo ogni save da
+        form (creazione o modifica tratta)."""
+        valid_wavelengths = set(self.wavelengths())
+        wavelengths = [wl for wl in self.selected_wavelengths if wl in valid_wavelengths]
+
+        existing_strands = {s.number: s for s in self.strands.all()}
+        for number in range(1, self.fiber_count + 1):
+            if number not in existing_strands:
+                existing_strands[number] = FiberStrand.objects.create(fiber_test=self, number=number)
+        for number, strand in list(existing_strands.items()):
+            if number > self.fiber_count:
+                strand.delete()
+                del existing_strands[number]
+
+        for strand in existing_strands.values():
+            measurements = strand.measurements.all()
+            existing_pairs = {(m.wavelength_nm, m.direction) for m in measurements}
+            measurements.exclude(wavelength_nm__in=wavelengths).delete()
+            for wavelength in wavelengths:
+                for direction, _ in FiberMeasurement.DIRECTION_CHOICES:
+                    if (wavelength, direction) not in existing_pairs:
+                        FiberMeasurement.objects.create(
+                            strand=strand, wavelength_nm=wavelength, direction=direction,
+                        )
+
+
+class FiberStrand(models.Model):
+    fiber_test = models.ForeignKey(FiberTest, on_delete=models.CASCADE, related_name='strands')
+    number = models.PositiveIntegerField('Numero fibra')
+
+    class Meta:
+        ordering = ['number']
+        unique_together = ('fiber_test', 'number')
+
+    def __str__(self):
+        return f'{self.fiber_test} · fibra {self.number}'
 
 
 class FiberMeasurement(models.Model):
     DIRECTION_CHOICES = [('A_B', 'A → B'), ('B_A', 'B → A')]
 
-    fiber_test = models.ForeignKey(FiberTest, on_delete=models.CASCADE, related_name='measurements')
+    strand = models.ForeignKey(FiberStrand, on_delete=models.CASCADE, related_name='measurements')
     wavelength_nm = models.PositiveIntegerField('Lunghezza d\'onda (nm)')
     direction = models.CharField('Direzione', max_length=3, choices=DIRECTION_CHOICES)
     measured_db = models.DecimalField(
@@ -77,21 +119,23 @@ class FiberMeasurement(models.Model):
         ordering = ['wavelength_nm', 'direction']
         constraints = [
             models.UniqueConstraint(
-                fields=['fiber_test', 'wavelength_nm', 'direction'],
-                name='unique_measurement_per_test_wavelength_direction',
+                fields=['strand', 'wavelength_nm', 'direction'],
+                name='unique_measurement_per_strand_wavelength_direction',
             ),
         ]
 
     def __str__(self):
-        return f'{self.fiber_test} · {self.wavelength_nm}nm {self.get_direction_display()}'
+        return f'{self.strand} · {self.wavelength_nm}nm {self.get_direction_display()}'
 
     @property
     def theoretical_db(self):
-        return self.fiber_test.theoretical_db(self.wavelength_nm)
+        return self.strand.fiber_test.theoretical_db(self.wavelength_nm)
 
     @property
     def threshold_db(self):
-        return services.plausibility_threshold_db(self.theoretical_db, self.fiber_test.project.tolerance_percent)
+        return services.plausibility_threshold_db(
+            self.theoretical_db, self.strand.fiber_test.project.tolerance_percent,
+        )
 
     @property
     def is_plausible(self):
