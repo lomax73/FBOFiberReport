@@ -4,10 +4,10 @@ from django.contrib.auth.mixins import LoginRequiredMixin
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.template.loader import render_to_string
-from django.urls import reverse
+from django.urls import reverse, reverse_lazy
 from django.utils import timezone
 from django.utils.text import slugify
-from django.views.generic import CreateView, DetailView, ListView, TemplateView, UpdateView
+from django.views.generic import CreateView, DeleteView, DetailView, ListView, TemplateView, UpdateView
 from weasyprint import HTML
 
 from . import services
@@ -40,6 +40,12 @@ class ProjectUpdateView(LoginRequiredMixin, UpdateView):
     model = Project
     form_class = ProjectForm
     template_name = 'collaudi/project_form.html'
+
+
+class ProjectDeleteView(LoginRequiredMixin, DeleteView):
+    model = Project
+    template_name = 'collaudi/project_confirm_delete.html'
+    success_url = reverse_lazy('project-list')
 
 
 class ProjectDetailView(LoginRequiredMixin, DetailView):
@@ -92,6 +98,14 @@ class FiberTestUpdateView(LoginRequiredMixin, UpdateView):
         response = super().form_valid(form)
         self.object.sync_strands_and_measurements()
         return response
+
+    def get_success_url(self):
+        return reverse('project-detail', args=[self.object.project_id])
+
+
+class FiberTestDeleteView(LoginRequiredMixin, DeleteView):
+    model = FiberTest
+    template_name = 'collaudi/fibertest_confirm_delete.html'
 
     def get_success_url(self):
         return reverse('project-detail', args=[self.object.project_id])

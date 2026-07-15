@@ -22,7 +22,10 @@
             <td><a href="{% url 'project-detail' project.pk %}">{{ project.name }}</a></td>
             <td>{{ project.address }}</td>
             <td>{{ project.fiber_tests.count }}</td>
-            <td><a href="{% url 'project-update' project.pk %}">Modifica</a></td>
+            <td>
+                <a href="{% url 'project-update' project.pk %}">Modifica</a> ·
+                <a href="{% url 'project-delete' project.pk %}">Elimina</a>
+            </td>
         </tr>
         {% endfor %}
     </tbody>

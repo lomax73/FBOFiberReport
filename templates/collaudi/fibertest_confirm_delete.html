@@ -1,0 +1,18 @@
+{% extends "base.html" %}
+
+{% block title %}Elimina tratta — Collaudi Fibra{% endblock %}
+
+{% block content %}
+<h1>Elimina tratta</h1>
+<div class="card">
+    <p>
+        Eliminare la tratta <strong>{{ object.start_point }} → {{ object.end_point }}</strong>?
+        Verranno eliminate anche tutte le sue fibre e misure. L'operazione è definitiva.
+    </p>
+    <form method="post">
+        {% csrf_token %}
+        <button class="btn" style="background:#ef4444;" type="submit">Elimina</button>
+        <a class="btn btn-secondary" href="{% url 'project-detail' object.project_id %}">Annulla</a>
+    </form>
+</div>
+{% endblock %}

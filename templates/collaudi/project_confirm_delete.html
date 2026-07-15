@@ -1,0 +1,18 @@
+{% extends "base.html" %}
+
+{% block title %}Elimina progetto — Collaudi Fibra{% endblock %}
+
+{% block content %}
+<h1>Elimina progetto</h1>
+<div class="card">
+    <p>
+        Eliminare <strong>{{ object.name }}</strong>? Verranno eliminate anche tutte le sue
+        {{ object.fiber_tests.count }} tratte e le misure associate. L'operazione è definitiva.
+    </p>
+    <form method="post">
+        {% csrf_token %}
+        <button class="btn" style="background:#ef4444;" type="submit">Elimina</button>
+        <a class="btn btn-secondary" href="{% url 'project-detail' object.pk %}">Annulla</a>
+    </form>
+</div>
+{% endblock %}
