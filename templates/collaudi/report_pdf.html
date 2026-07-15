@@ -89,10 +89,14 @@
         <div>Giunzioni: <strong>{{ test.get_splice_type_display }} &times; {{ test.splice_count }}</strong></div>
         <div>Connettori: <strong>{{ test.get_connector_type_display }} &times; {{ test.connector_count }}</strong></div>
         <div>Numero fibre: <strong>{{ test.fiber_count }}</strong></div>
+        {% if test.panel_number %}<div>N&deg; pannello: <strong>{{ test.panel_number }}</strong></div>{% endif %}
     </div>
 
     {% for strand in test.strands.all %}
-    <p class="strand-title">Fibra {{ strand.number }}</p>
+    <p class="strand-title">
+        Fibra {{ strand.number }}{% if strand.panel_position %} &middot; posizione {{ strand.panel_position }}{% endif %}
+        &middot; {{ strand.get_direction_mode_display }}
+    </p>
     <table>
         <thead>
             <tr>

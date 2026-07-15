@@ -35,5 +35,5 @@ class FiberTestAdmin(admin.ModelAdmin):
 
 @admin.register(FiberStrand)
 class FiberStrandAdmin(admin.ModelAdmin):
-    list_display = ('fiber_test', 'number')
+    list_display = ('fiber_test', 'number', 'panel_position', 'direction_mode')
     inlines = [FiberMeasurementInline]

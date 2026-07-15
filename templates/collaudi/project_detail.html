@@ -41,6 +41,7 @@
                 {{ test.get_splice_type_display }} ({{ test.splice_count }}) ·
                 {{ test.get_connector_type_display }} ({{ test.connector_count }}) ·
                 {{ test.test_datetime }}
+                {% if test.panel_number %} · N° pannello {{ test.panel_number }}{% endif %}
             </div>
         </div>
         <div style="display:flex; gap:0.5rem;">
@@ -52,7 +53,9 @@
     {% for strand in test.strands.all %}
     {% with measurements=strand.measurements.all %}
     {% if measurements %}
-    <h3 style="font-size:0.85rem; text-transform:uppercase; letter-spacing:0.04em; color:#64748b; margin:1rem 0 0.4rem;">Fibra {{ strand.number }}</h3>
+    <h3 style="font-size:0.85rem; text-transform:uppercase; letter-spacing:0.04em; color:#64748b; margin:1rem 0 0.4rem;">
+        Fibra {{ strand.number }}{% if strand.panel_position %} · posizione {{ strand.panel_position }}{% endif %} · {{ strand.get_direction_mode_display }}
+    </h3>
     <table style="margin-top:0.25rem;">
         <thead>
             <tr><th>λ (nm)</th><th>Direzione</th><th>Misurato (dB)</th><th>Teorico (dB)</th><th>Esito</th></tr>

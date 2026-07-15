@@ -45,6 +45,7 @@ class FiberTest(models.Model):
     test_datetime = models.DateTimeField('Data e ora del test')
     fiber_count = models.PositiveIntegerField('Numero di fibre', default=1)
     selected_wavelengths = models.JSONField("Lunghezze d'onda da testare", default=list)
+    panel_number = models.CharField('N° pannello', max_length=50, blank=True)
 
     class Meta:
         ordering = ['start_point', 'end_point']
@@ -82,20 +83,22 @@ class FiberTest(models.Model):
                 del existing_strands[number]
 
         for strand in existing_strands.values():
-            measurements = strand.measurements.all()
-            existing_pairs = {(m.wavelength_nm, m.direction) for m in measurements}
-            measurements.exclude(wavelength_nm__in=wavelengths).delete()
-            for wavelength in wavelengths:
-                for direction, _ in FiberMeasurement.DIRECTION_CHOICES:
-                    if (wavelength, direction) not in existing_pairs:
-                        FiberMeasurement.objects.create(
-                            strand=strand, wavelength_nm=wavelength, direction=direction,
-                        )
+            strand.sync_measurements(wavelengths)
 
 
 class FiberStrand(models.Model):
+    DIRECTION_MODE_CHOICES = [
+        ('both', 'Entrambe le direzioni'),
+        ('a_to_b', 'Solo A → B'),
+        ('b_to_a', 'Solo B → A'),
+    ]
+
     fiber_test = models.ForeignKey(FiberTest, on_delete=models.CASCADE, related_name='strands')
     number = models.PositiveIntegerField('Numero fibra')
+    panel_position = models.CharField('Posizione nel pannello', max_length=50, blank=True)
+    direction_mode = models.CharField(
+        'Direzioni da testare', max_length=10, choices=DIRECTION_MODE_CHOICES, default='both',
+    )
 
     class Meta:
         ordering = ['number']
@@ -103,6 +106,29 @@ class FiberStrand(models.Model):
 
     def __str__(self):
         return f'{self.fiber_test} · fibra {self.number}'
+
+    def directions(self):
+        if self.direction_mode == 'a_to_b':
+            return ['A_B']
+        if self.direction_mode == 'b_to_a':
+            return ['B_A']
+        return ['A_B', 'B_A']
+
+    def sync_measurements(self, wavelengths):
+        """Allinea le FiberMeasurement di questa fibra alle lunghezze d'onda
+        e alla direction_mode correnti. Da chiamare dopo ogni save della
+        fibra (creazione tratta o modifica impostazioni fibra)."""
+        directions = self.directions()
+        measurements = self.measurements.all()
+        existing_pairs = {(m.wavelength_nm, m.direction) for m in measurements}
+        measurements.exclude(wavelength_nm__in=wavelengths).delete()
+        measurements.exclude(direction__in=directions).delete()
+        for wavelength in wavelengths:
+            for direction in directions:
+                if (wavelength, direction) not in existing_pairs:
+                    FiberMeasurement.objects.create(
+                        strand=self, wavelength_nm=wavelength, direction=direction,
+                    )
 
 
 class FiberMeasurement(models.Model):

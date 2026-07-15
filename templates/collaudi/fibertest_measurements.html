@@ -4,13 +4,23 @@
 
 {% block content %}
 <h1>Misure: {{ fiber_test.start_point }} → {{ fiber_test.end_point }}</h1>
-<p style="color:#64748b; margin-top:-0.75rem;">Progetto: <a href="{% url 'project-detail' project.pk %}">{{ project.name }}</a></p>
+<p style="color:#64748b; margin-top:-0.75rem;">
+    Progetto: <a href="{% url 'project-detail' project.pk %}">{{ project.name }}</a>
+    {% if fiber_test.panel_number %} · N° pannello: {{ fiber_test.panel_number }}{% endif %}
+</p>
 
 <form method="post">
     {% csrf_token %}
     {% for group in strand_groups %}
     <div class="card">
-        <h2 style="font-size:1.1rem; margin-bottom:0.75rem;">Fibra {{ group.strand.number }}</h2>
+        <div style="display:flex; align-items:baseline; justify-content:space-between; flex-wrap:wrap; gap:0.5rem; margin-bottom:0.75rem;">
+            <h2 style="font-size:1.1rem; margin:0;">
+                Fibra {{ group.strand.number }}
+                {% if group.strand.panel_position %}<span style="font-weight:400; color:#64748b; font-size:0.9rem;"> · posizione {{ group.strand.panel_position }}</span>{% endif %}
+                <span style="font-weight:400; color:#64748b; font-size:0.9rem;"> · {{ group.strand.get_direction_mode_display }}</span>
+            </h2>
+            <a class="btn btn-secondary" href="{% url 'strand-update' group.strand.pk %}">Modifica fibra</a>
+        </div>
         {{ group.formset.management_form }}
         <table>
             <thead>

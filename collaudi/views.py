@@ -11,8 +11,8 @@ from django.views.generic import CreateView, DetailView, ListView, TemplateView,
 from weasyprint import HTML
 
 from . import services
-from .forms import FiberMeasurementFormSet, FiberTestForm, ProjectForm
-from .models import FiberTest, Project
+from .forms import FiberMeasurementFormSet, FiberStrandForm, FiberTestForm, ProjectForm
+from .models import FiberStrand, FiberTest, Project
 
 
 class CalculatorView(LoginRequiredMixin, TemplateView):
@@ -95,6 +95,25 @@ class FiberTestUpdateView(LoginRequiredMixin, UpdateView):
 
     def get_success_url(self):
         return reverse('project-detail', args=[self.object.project_id])
+
+
+def strand_update(request, pk):
+    strand = get_object_or_404(FiberStrand, pk=pk)
+    fiber_test = strand.fiber_test
+    if request.method == 'POST':
+        form = FiberStrandForm(request.POST, instance=strand)
+        if form.is_valid():
+            form.save()
+            strand.sync_measurements(fiber_test.selected_wavelengths)
+            return redirect('fibertest-measurements', pk=fiber_test.pk)
+    else:
+        form = FiberStrandForm(instance=strand)
+    return render(request, 'collaudi/strand_form.html', {
+        'project': fiber_test.project,
+        'fiber_test': fiber_test,
+        'strand': strand,
+        'form': form,
+    })
 
 
 def fibertest_measurements(request, pk):

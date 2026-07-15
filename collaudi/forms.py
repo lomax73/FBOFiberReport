@@ -26,7 +26,7 @@ class FiberTestForm(forms.ModelForm):
     class Meta:
         model = FiberTest
         fields = [
-            'start_point', 'end_point', 'fiber_type',
+            'start_point', 'end_point', 'panel_number', 'fiber_type',
             'length_value', 'length_unit',
             'splice_type', 'splice_count',
             'connector_type', 'connector_count',
@@ -59,6 +59,12 @@ class FiberTestForm(forms.ModelForm):
         if commit:
             instance.save()
         return instance
+
+
+class FiberStrandForm(forms.ModelForm):
+    class Meta:
+        model = FiberStrand
+        fields = ['panel_position', 'direction_mode']
 
 
 class FiberMeasurementForm(forms.ModelForm):

@@ -12,4 +12,5 @@ urlpatterns = [
     path('progetti/<int:project_pk>/tratte/nuova/', views.FiberTestCreateView.as_view(), name='fibertest-create'),
     path('tratte/<int:pk>/modifica/', views.FiberTestUpdateView.as_view(), name='fibertest-update'),
     path('tratte/<int:pk>/misure/', views.fibertest_measurements, name='fibertest-measurements'),
+    path('fibre/<int:pk>/modifica/', views.strand_update, name='strand-update'),
 ]
