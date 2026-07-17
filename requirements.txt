@@ -4,3 +4,4 @@ gunicorn
 weasyprint
 pillow
 graphviz
+requests

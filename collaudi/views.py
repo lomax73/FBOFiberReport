@@ -1,3 +1,4 @@
+from dataclasses import dataclass
 from pathlib import Path
 
 from django.contrib.auth.mixins import LoginRequiredMixin
@@ -10,9 +11,47 @@ from django.utils.text import slugify
 from django.views.generic import CreateView, DeleteView, DetailView, ListView, TemplateView, UpdateView
 from weasyprint import HTML
 
-from . import services
+from . import portal_client, services
 from .forms import FiberMeasurementFormSet, FiberStrandForm, FiberTestForm, ProjectForm
 from .models import FiberStrand, FiberTest, Project
+
+
+@dataclass
+class ClienteInfo:
+    """Dati del cliente risolti dall'anagrafica condivisa nel Portale."""
+
+    id: str = ''
+    ragione_sociale: str = ''
+    indirizzo: str = ''
+    cap: str = ''
+    citta: str = ''
+    provincia: str = ''
+    piva: str = ''
+    email: str = ''
+    telefono: str = ''
+    note: str = ''
+
+    def __str__(self):
+        return self.ragione_sociale
+
+
+def _attach_clienti(projects):
+    """Risolve client_id -> dati cliente per una lista di progetti con UNA
+    sola chiamata al Portale (non una per riga). Nessun errore se il
+    Portale non risponde o il progetto non ha un cliente collegato:
+    project.cliente resta None."""
+    projects = list(projects)
+    try:
+        by_id = {c['id']: c for c in portal_client.list_clienti()}
+    except portal_client.PortalUnavailableError:
+        by_id = {}
+    for project in projects:
+        if not project.client_id:
+            project.cliente = None
+            continue
+        dati = by_id.get(str(project.client_id))
+        project.cliente = ClienteInfo(**dati) if dati else ClienteInfo(ragione_sociale='Cliente non disponibile')
+    return projects
 
 
 class CalculatorView(LoginRequiredMixin, TemplateView):
@@ -28,6 +67,11 @@ class ProjectListView(LoginRequiredMixin, ListView):
     model = Project
     template_name = 'collaudi/project_list.html'
     context_object_name = 'projects'
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['projects'] = _attach_clienti(context['projects'])
+        return context
 
 
 class ProjectCreateView(LoginRequiredMixin, CreateView):
@@ -57,6 +101,7 @@ class ProjectDetailView(LoginRequiredMixin, DetailView):
         context = super().get_context_data(**kwargs)
         context['fiber_tests'] = self.object.fiber_tests.prefetch_related('strands__measurements')
         context['topology_svg'] = services.build_topology_svg(self.object, context['fiber_tests'])
+        _attach_clienti([self.object])
         return context
 
 
@@ -163,6 +208,7 @@ def fibertest_measurements(request, pk):
 
 def project_report_pdf(request, pk):
     project = get_object_or_404(Project, pk=pk)
+    _attach_clienti([project])
     fiber_tests = list(project.fiber_tests.prefetch_related('strands__measurements'))
     logo_uri = Path(project.logo.path).as_uri() if project.logo else None
     html_string = render_to_string('collaudi/report_pdf.html', {

@@ -8,6 +8,7 @@
     <div>
         <h1>{{ project.name }}</h1>
         <p style="color:#64748b; margin:0;">{{ project.address }}</p>
+        {% if project.cliente %}<p style="color:#64748b; margin:0;">Cliente: {{ project.cliente }}</p>{% endif %}
     </div>
     <div style="display:flex; gap:0.6rem; flex-wrap:wrap;">
         <a class="btn btn-secondary" href="{% url 'project-update' project.pk %}">Modifica progetto</a>

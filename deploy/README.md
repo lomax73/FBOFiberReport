@@ -83,6 +83,22 @@ remoto. **Va esposta solo in locale**, mai pubblicamente:
    Fibra → campo "API token"), insieme a `internal_base_url =
    https://127.0.0.1:8444`.
 
+## Anagrafica clienti condivisa (dal Portale)
+
+`Project.client_id` (UUID) si risolve in tempo reale chiamando l'API di
+sola lettura del Portale (`clienti/api/internal/clienti/`), stesso
+schema HTTP della gestione utenti sopra ma in direzione opposta (qui è
+questa app a chiamare il Portale). Configurare in `.env`:
+- `PORTAL_INTERNAL_BASE_URL` (es. `https://127.0.0.1:8443`, l'URL
+  loopback del Portale, non quello pubblico)
+- `PORTAL_API_TOKEN` (stesso valore di `INTERNAL_API_TOKEN` nel `.env`
+  del Portale)
+- `PORTAL_PUBLIC_URL` (solo per il link "Clienti (Portale)" in sidebar)
+
+Se il Portale non risponde, il picker cliente nel form progetto mostra
+un errore invece di bloccarsi, e liste/dettaglio/PDF mostrano "Cliente
+non disponibile" invece di un 500.
+
 ## Deploy di un aggiornamento
 
 ```

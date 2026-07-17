@@ -89,6 +89,7 @@
 
 <h1>{{ project.name }}</h1>
 <p class="project-address">{{ project.address }}</p>
+{% if project.cliente %}<p class="project-address">Cliente: {{ project.cliente }}</p>{% endif %}
 <p class="project-sub">Tolleranza di plausibilità: {{ project.tolerance_percent }}%</p>
 
 {% if topology_svg %}

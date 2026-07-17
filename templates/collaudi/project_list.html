@@ -14,13 +14,14 @@
 {% if projects %}
 <table>
     <thead>
-        <tr><th>Cantiere</th><th>Indirizzo</th><th>Tratte</th><th></th></tr>
+        <tr><th>Cantiere</th><th>Indirizzo</th><th>Cliente</th><th>Tratte</th><th></th></tr>
     </thead>
     <tbody>
         {% for project in projects %}
         <tr>
             <td><a href="{% url 'project-detail' project.pk %}">{{ project.name }}</a></td>
             <td>{{ project.address }}</td>
+            <td>{{ project.cliente|default:"—" }}</td>
             <td>{{ project.fiber_tests.count }}</td>
             <td>
                 <a href="{% url 'project-update' project.pk %}">Modifica</a> ·

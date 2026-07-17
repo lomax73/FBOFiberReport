@@ -1,14 +1,38 @@
 from django import forms
 from django.forms import inlineformset_factory
 
-from . import services
+from . import portal_client, services
 from .models import FiberMeasurement, FiberStrand, FiberTest, Project
 
 
 class ProjectForm(forms.ModelForm):
+    cliente = forms.ChoiceField(label='Cliente', required=False)
+
     class Meta:
         model = Project
-        fields = ['name', 'address', 'client_id', 'logo', 'tolerance_percent']
+        fields = ['name', 'address', 'logo', 'tolerance_percent']
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        choices = [('', '— nessuno —')]
+        try:
+            clienti = portal_client.list_clienti()
+        except portal_client.PortalUnavailableError as exc:
+            self.fields['cliente'].help_text = (
+                f'Impossibile contattare l\'anagrafica clienti nel Portale: {exc}'
+            )
+        else:
+            choices += [(c['id'], c['ragione_sociale']) for c in clienti]
+        self.fields['cliente'].choices = choices
+        if self.instance and self.instance.pk and self.instance.client_id:
+            self.fields['cliente'].initial = str(self.instance.client_id)
+
+    def save(self, commit=True):
+        instance = super().save(commit=False)
+        instance.client_id = self.cleaned_data['cliente'] or None
+        if commit:
+            instance.save()
+        return instance
 
 
 class FiberTestForm(forms.ModelForm):

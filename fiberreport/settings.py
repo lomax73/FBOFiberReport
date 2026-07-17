@@ -27,6 +27,15 @@ ALLOWED_HOSTS = [h for h in os.environ.get('DJANGO_ALLOWED_HOSTS', 'localhost,12
 # aggiuntiva. Generarlo con: python -c "import secrets; print(secrets.token_urlsafe(32))"
 INTERNAL_API_TOKEN = os.environ.get('INTERNAL_API_TOKEN', '')
 
+# Anagrafica clienti condivisa: vive nel Portale (clienti/api/internal/),
+# qui teniamo solo il client_id (UUID) sul Project e risolviamo nome/
+# indirizzo chiamando questa API in tempo reale. Generare PORTAL_API_TOKEN
+# con lo stesso valore di INTERNAL_API_TOKEN nel .env del Portale.
+PORTAL_INTERNAL_BASE_URL = os.environ.get('PORTAL_INTERNAL_BASE_URL', '')
+PORTAL_API_TOKEN = os.environ.get('PORTAL_API_TOKEN', '')
+# URL pubblico del Portale, solo per il link "Gestisci clienti" in sidebar.
+PORTAL_PUBLIC_URL = os.environ.get('PORTAL_PUBLIC_URL', '')
+
 
 # Application definition
 
@@ -63,6 +72,7 @@ TEMPLATES = [
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
+                'collaudi.context_processors.portal_public_url',
             ],
         },
     },
