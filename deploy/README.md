@@ -13,6 +13,14 @@ WeasyPrint, che richiede librerie di sistema (non pacchetti Python):
 apt install libpango-1.0-0 libpangocairo-1.0-0 libgdk-pixbuf2.0-0 libcairo2
 ```
 
+**Altra dipendenza di sistema**: il grafo di topologia rete (pagina
+progetto e report PDF) è generato con Graphviz, che richiede il binario
+`dot` (non solo il pacchetto Python `graphviz` già in `requirements.txt`):
+
+```
+apt install graphviz
+```
+
 ## Provisioning iniziale (una tantum)
 
 ```
@@ -22,6 +30,7 @@ mkdir -p /opt/fiberreport/app
 chown fiberreport:fiberreport /opt/fiberreport/app
 
 apt install libpango-1.0-0 libpangocairo-1.0-0 libgdk-pixbuf2.0-0 libcairo2
+apt install graphviz
 
 sudo -u fiberreport git clone <url-repo> /opt/fiberreport/app
 cd /opt/fiberreport/app

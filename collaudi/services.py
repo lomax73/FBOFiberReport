@@ -7,6 +7,8 @@ prassi TIA-568 — stime di massima, non sostituiscono la misura reale).
 
 from decimal import Decimal
 
+import graphviz
+
 FIBER_TYPES = {
     'sm_g652d': {
         'label': 'Monomodale G.652D',
@@ -94,6 +96,43 @@ def theoretical_attenuation_db(fiber_test, wavelength_nm):
 
 def plausibility_threshold_db(theoretical_db, tolerance_percent):
     return theoretical_db * (Decimal('1') + tolerance_percent / Decimal('100'))
+
+
+TOPOLOGY_STATUS_COLORS = {
+    'verified': '#22c55e',
+    'failed': '#ef4444',
+    'pending': '#9ca3af',
+}
+
+
+def build_topology_svg(project, fiber_tests):
+    """Grafo di topologia del progetto: un nodo per punto nominato, un arco
+    per tratta (FiberTest) colorato in base a topology_status(). fiber_tests
+    va passata già prefetchata (strands__measurements) dal chiamante per non
+    duplicare query. Ritorna None se il progetto non ha tratte."""
+    fiber_tests = list(fiber_tests)
+    if not fiber_tests:
+        return None
+
+    graph = graphviz.Graph(format='svg')
+    graph.attr('node', shape='box', style='rounded,filled', fillcolor='#eaf6fc', color='#123247', fontname='Helvetica')
+    graph.attr('edge', fontname='Helvetica', fontsize='10', penwidth='2')
+    graph.attr(fontname='Helvetica', nodesep='0.7', ranksep='0.9')
+
+    points = set()
+    for test in fiber_tests:
+        points.add(test.start_point)
+        points.add(test.end_point)
+    for point in points:
+        graph.node(point, point)
+
+    for test in fiber_tests:
+        fiber_label = '1 fibra' if test.fiber_count == 1 else f'{test.fiber_count} fibre'
+        label = f'{test.start_point} → {test.end_point}\n{fiber_label}'
+        color = TOPOLOGY_STATUS_COLORS[test.topology_status()]
+        graph.edge(test.start_point, test.end_point, label=label, color=color, fontcolor=color)
+
+    return graph.pipe(encoding='utf-8')
 
 
 def coefficients_for_calculator():

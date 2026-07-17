@@ -67,6 +67,25 @@ class FiberTest(models.Model):
         """Lunghezze d'onda valide per il tipo di fibra (non quelle scelte)."""
         return services.wavelengths_for_fiber_type(self.fiber_type)
 
+    def topology_status(self):
+        """Stato aggregato della tratta per il grafo di topologia: 'failed'
+        se almeno una misura non è plausibile, 'pending' se nessuna è
+        fallita ma qualcuna è ancora senza misura, 'verified' se tutte le
+        misure esistenti sono plausibili. Presuppone strands/measurements
+        già prefetchate dal chiamante."""
+        has_measurement = False
+        has_pending = False
+        for strand in self.strands.all():
+            for measurement in strand.measurements.all():
+                has_measurement = True
+                if measurement.is_plausible is False:
+                    return 'failed'
+                if measurement.is_plausible is None:
+                    has_pending = True
+        if not has_measurement or has_pending:
+            return 'pending'
+        return 'verified'
+
     def sync_strands_and_measurements(self):
         """Allinea FiberStrand e FiberMeasurement a fiber_count e
         selected_wavelengths correnti. Da chiamare dopo ogni save da

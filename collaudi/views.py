@@ -56,6 +56,7 @@ class ProjectDetailView(LoginRequiredMixin, DetailView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context['fiber_tests'] = self.object.fiber_tests.prefetch_related('strands__measurements')
+        context['topology_svg'] = services.build_topology_svg(self.object, context['fiber_tests'])
         return context
 
 
@@ -162,11 +163,12 @@ def fibertest_measurements(request, pk):
 
 def project_report_pdf(request, pk):
     project = get_object_or_404(Project, pk=pk)
-    fiber_tests = project.fiber_tests.prefetch_related('strands__measurements')
+    fiber_tests = list(project.fiber_tests.prefetch_related('strands__measurements'))
     logo_uri = Path(project.logo.path).as_uri() if project.logo else None
     html_string = render_to_string('collaudi/report_pdf.html', {
         'project': project,
         'fiber_tests': fiber_tests,
+        'topology_svg': services.build_topology_svg(project, fiber_tests),
         'logo_uri': logo_uri,
         'now': timezone.localtime(),
         'request': request,

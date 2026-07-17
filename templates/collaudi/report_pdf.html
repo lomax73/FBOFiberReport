@@ -26,6 +26,12 @@
     .project-address { font-size: 10pt; color: #475569; margin: 0 0 4pt; }
     .project-sub { font-size: 8.5pt; color: #94a3b8; margin: 0; }
 
+    .topology-block {
+        margin-top: 14pt;
+        page-break-inside: avoid;
+    }
+    .topology-block svg { max-width: 100%; height: auto; }
+
     .test-block {
         margin-top: 14pt;
         page-break-inside: avoid;
@@ -84,6 +90,13 @@
 <h1>{{ project.name }}</h1>
 <p class="project-address">{{ project.address }}</p>
 <p class="project-sub">Tolleranza di plausibilità: {{ project.tolerance_percent }}%</p>
+
+{% if topology_svg %}
+<div class="topology-block">
+    <p class="strand-title">Topologia rete</p>
+    {{ topology_svg|safe }}
+</div>
+{% endif %}
 
 {% for test in fiber_tests %}
 <div class="test-block">

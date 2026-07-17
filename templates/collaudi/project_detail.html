@@ -3,6 +3,7 @@
 {% block title %}{{ project.name }} — Collaudi Fibra{% endblock %}
 
 {% block content %}
+<style>.topology-svg-wrap svg { max-width: 100%; height: auto; }</style>
 <div style="display:flex; align-items:flex-start; justify-content:space-between; gap:1rem; margin-bottom:1.5rem; flex-wrap:wrap;">
     <div>
         <h1>{{ project.name }}</h1>
@@ -28,6 +29,13 @@
 <div class="card" style="font-size:0.9rem; color:#64748b;">
     Tolleranza di plausibilità: <strong style="color:var(--ink);">{{ project.tolerance_percent }}%</strong>
 </div>
+
+{% if topology_svg %}
+<h2 style="margin-top:2rem;">Topologia rete</h2>
+<div class="card topology-svg-wrap" style="overflow-x:auto;">
+    {{ topology_svg|safe }}
+</div>
+{% endif %}
 
 <h2 style="margin-top:2rem;">Tratte</h2>
 {% if fiber_tests %}
