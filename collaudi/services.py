@@ -12,39 +12,56 @@ import graphviz
 FIBER_TYPES = {
     'sm_g652d': {
         'label': 'Monomodale G.652D',
+        'label_en': 'Single-mode G.652D',
         'wavelengths': {1310: Decimal('0.35'), 1550: Decimal('0.22'), 1625: Decimal('0.24')},
     },
     'sm_g657': {
         'label': 'Monomodale G.657 A/B',
+        'label_en': 'Single-mode G.657 A/B',
         'wavelengths': {1310: Decimal('0.35'), 1550: Decimal('0.22'), 1625: Decimal('0.24')},
     },
     'mm_om1': {
         'label': 'Multimodale OM1 (62,5/125)',
+        'label_en': 'Multi-mode OM1 (62.5/125)',
         'wavelengths': {850: Decimal('3.5'), 1300: Decimal('1.5')},
     },
     'mm_om2': {
         'label': 'Multimodale OM2 (50/125)',
+        'label_en': 'Multi-mode OM2 (50/125)',
         'wavelengths': {850: Decimal('3.5'), 1300: Decimal('1.5')},
     },
     'mm_om3': {
         'label': 'Multimodale OM3 (50/125 laser-ott.)',
+        'label_en': 'Multi-mode OM3 (50/125 laser-optimized)',
         'wavelengths': {850: Decimal('3.0'), 1300: Decimal('1.0')},
     },
     'mm_om45': {
         'label': 'Multimodale OM4/OM5 (50/125 laser-ott.)',
+        'label_en': 'Multi-mode OM4/OM5 (50/125 laser-optimized)',
         'wavelengths': {850: Decimal('3.0'), 1300: Decimal('1.0')},
     },
 }
 
 SPLICE_TYPES = {
-    'fusion': {'label': 'Fusione', 'loss': Decimal('0.10')},
-    'mechanical': {'label': 'Meccanica', 'loss': Decimal('0.30')},
+    'fusion': {'label': 'Fusione', 'label_en': 'Fusion', 'loss': Decimal('0.10')},
+    'mechanical': {'label': 'Meccanica', 'label_en': 'Mechanical', 'loss': Decimal('0.30')},
 }
 
 CONNECTOR_TYPES = {
-    'factory': {'label': 'Connettorizzato in fabbrica (pigtail)', 'loss': Decimal('0.30')},
-    'field': {'label': 'Terminato in campo', 'loss': Decimal('0.50')},
-    'generic': {'label': 'Generico / da capitolato', 'loss': Decimal('0.50')},
+    'factory': {'label': 'Connettorizzato in fabbrica (pigtail)', 'label_en': 'Factory-terminated (pigtail)', 'loss': Decimal('0.30')},
+    'field': {'label': 'Terminato in campo', 'label_en': 'Field-terminated', 'loss': Decimal('0.50')},
+    'generic': {'label': 'Generico / da capitolato', 'label_en': 'Generic / per specification', 'loss': Decimal('0.50')},
+}
+
+DIRECTION_LABELS = {
+    'A_B': {'it': 'A → B', 'en': 'A → B'},
+    'B_A': {'it': 'B → A', 'en': 'B → A'},
+}
+
+DIRECTION_MODE_LABELS = {
+    'both': {'it': 'Entrambe le direzioni', 'en': 'Both directions'},
+    'a_to_b': {'it': 'Solo A → B', 'en': 'A → B only'},
+    'b_to_a': {'it': 'Solo B → A', 'en': 'B → A only'},
 }
 
 
@@ -75,6 +92,33 @@ def all_wavelength_choices():
 def fiber_type_wavelength_map():
     """Per il JS del form tratta: fiber_type -> lista di lunghezze d'onda valide."""
     return {key: sorted(val['wavelengths'].keys()) for key, val in FIBER_TYPES.items()}
+
+
+def _localized_label(mapping, key, lang):
+    entry = mapping[key]
+    if lang == 'en':
+        return entry.get('label_en', entry['label'])
+    return entry['label']
+
+
+def fiber_type_label(fiber_type, lang='it'):
+    return _localized_label(FIBER_TYPES, fiber_type, lang)
+
+
+def splice_type_label(splice_type, lang='it'):
+    return _localized_label(SPLICE_TYPES, splice_type, lang)
+
+
+def connector_type_label(connector_type, lang='it'):
+    return _localized_label(CONNECTOR_TYPES, connector_type, lang)
+
+
+def direction_label(direction, lang='it'):
+    return DIRECTION_LABELS[direction].get(lang, DIRECTION_LABELS[direction]['it'])
+
+
+def direction_mode_label(direction_mode, lang='it'):
+    return DIRECTION_MODE_LABELS[direction_mode].get(lang, DIRECTION_MODE_LABELS[direction_mode]['it'])
 
 
 def default_splice_loss(splice_type):

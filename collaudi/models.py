@@ -8,6 +8,8 @@ from . import services
 
 
 class Project(models.Model):
+    REPORT_LANGUAGE_CHOICES = [('it', 'Italiano'), ('en', 'English')]
+
     name = models.CharField('Nome cantiere', max_length=200)
     address = models.CharField('Indirizzo', max_length=300)
     client_id = models.UUIDField(
@@ -17,6 +19,9 @@ class Project(models.Model):
     logo = models.ImageField('Logo', upload_to='project_logos/', blank=True)
     tolerance_percent = models.DecimalField(
         'Tolleranza di plausibilità (%)', max_digits=5, decimal_places=2, default=Decimal('15.00'),
+    )
+    report_language = models.CharField(
+        'Lingua del report', max_length=2, choices=REPORT_LANGUAGE_CHOICES, default='it',
     )
     created_at = models.DateTimeField(auto_now_add=True)
 
@@ -62,6 +67,15 @@ class FiberTest(models.Model):
 
     def theoretical_db(self, wavelength_nm):
         return services.theoretical_attenuation_db(self, wavelength_nm)
+
+    def fiber_type_label(self, lang='it'):
+        return services.fiber_type_label(self.fiber_type, lang)
+
+    def splice_type_label(self, lang='it'):
+        return services.splice_type_label(self.splice_type, lang)
+
+    def connector_type_label(self, lang='it'):
+        return services.connector_type_label(self.connector_type, lang)
 
     def wavelengths(self):
         """Lunghezze d'onda valide per il tipo di fibra (non quelle scelte)."""
@@ -143,6 +157,9 @@ class FiberStrand(models.Model):
             return ['B_A']
         return ['A_B', 'B_A']
 
+    def direction_mode_label(self, lang='it'):
+        return services.direction_mode_label(self.direction_mode, lang)
+
     def sync_measurements(self, wavelengths):
         """Allinea le FiberMeasurement di questa fibra alle lunghezze d'onda
         e alla direction_mode correnti. Da chiamare dopo ogni save della
@@ -181,6 +198,9 @@ class FiberMeasurement(models.Model):
 
     def __str__(self):
         return f'{self.strand} · {self.wavelength_nm}nm {self.get_direction_display()}'
+
+    def direction_label(self, lang='it'):
+        return services.direction_label(self.direction, lang)
 
     @property
     def theoretical_db(self):

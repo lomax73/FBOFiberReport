@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="it">
+<html lang="{{ lang }}">
 <head>
 <meta charset="UTF-8">
 <title>Report collaudo — {{ project.name }}</title>
@@ -31,6 +31,13 @@
         page-break-inside: avoid;
     }
     .topology-block svg { max-width: 100%; height: auto; }
+    .topology-title {
+        font-size: 13pt;
+        font-weight: bold;
+        text-align: center;
+        color: #123247;
+        margin: 0 0 8pt;
+    }
 
     .test-block {
         margin-top: 14pt;
@@ -83,18 +90,21 @@
         {% if logo_uri %}<img src="{{ logo_uri }}" alt="{{ project.name }}">{% endif %}
     </div>
     <div class="meta">
-        Report generato il {{ now|date:"d/m/Y" }} alle {{ now|time:"H:i" }}
+        {{ generated_text }}
     </div>
 </div>
 
 <h1>{{ project.name }}</h1>
 <p class="project-address">{{ project.address }}</p>
-{% if project.cliente %}<p class="project-address">Cliente: {{ project.cliente }}</p>{% endif %}
-<p class="project-sub">Tolleranza di plausibilità: {{ project.tolerance_percent }}%</p>
+{% if project.cliente %}
+<p class="project-address" style="margin-top:8pt;">{{ project.cliente.ragione_sociale }}</p>
+{% if project.cliente.full_address %}<p class="project-address">{{ project.cliente.full_address }}</p>{% endif %}
+{% endif %}
+<p class="project-sub">{{ tolerance_text }}</p>
 
 {% if topology_svg %}
 <div class="topology-block">
-    <p class="strand-title">Topologia rete</p>
+    <p class="topology-title">{{ t.topology }}</p>
     {{ topology_svg|safe }}
 </div>
 {% endif %}
@@ -103,45 +113,45 @@
 <div class="test-block">
     <p class="test-title">{{ test.start_point }} &rarr; {{ test.end_point }}</p>
     <div class="test-meta">
-        <div>Tipo fibra: <strong>{{ test.get_fiber_type_display }}</strong></div>
-        <div>Lunghezza tratta: <strong>{{ test.length_value }} {{ test.length_unit }}</strong></div>
-        <div>Data/ora test: <strong>{{ test.test_datetime|date:"d/m/Y H:i" }}</strong></div>
-        <div>Giunzioni: <strong>{{ test.get_splice_type_display }} &times; {{ test.splice_count }}</strong></div>
-        <div>Connettori: <strong>{{ test.get_connector_type_display }} &times; {{ test.connector_count }}</strong></div>
-        <div>Numero fibre: <strong>{{ test.fiber_count }}</strong></div>
-        {% if test.panel_number %}<div>N&deg; pannello: <strong>{{ test.panel_number }}</strong></div>{% endif %}
+        <div>{{ t.fiber_type }}: <strong>{{ test.fiber_type_label_text }}</strong></div>
+        <div>{{ t.length }}: <strong>{{ test.length_value }} {{ test.length_unit }}</strong></div>
+        <div>{{ t.test_datetime }}: <strong>{{ test.test_datetime|date:"d/m/Y H:i" }}</strong></div>
+        <div>{{ t.splices }}: <strong>{{ test.splice_type_label_text }} &times; {{ test.splice_count }}</strong></div>
+        <div>{{ t.connectors }}: <strong>{{ test.connector_type_label_text }} &times; {{ test.connector_count }}</strong></div>
+        <div>{{ t.fiber_count }}: <strong>{{ test.fiber_count }}</strong></div>
+        {% if test.panel_number %}<div>{{ t.panel_number }}: <strong>{{ test.panel_number }}</strong></div>{% endif %}
     </div>
 
     {% for strand in test.strands.all %}
     <p class="strand-title">
-        Fibra {{ strand.number }}{% if strand.panel_position %} &middot; posizione {{ strand.panel_position }}{% endif %}
-        &middot; {{ strand.get_direction_mode_display }}
+        {{ t.fiber }} {{ strand.number }}{% if strand.panel_position %} &middot; {{ t.position }} {{ strand.panel_position }}{% endif %}
+        &middot; {{ strand.direction_mode_label_text }}
     </p>
-    {% if strand.image_uri %}<img src="{{ strand.image_uri }}" class="strand-image" alt="Immagine fibra {{ strand.number }}">{% endif %}
+    {% if strand.image_uri %}<img src="{{ strand.image_uri }}" class="strand-image" alt="{{ t.fiber }} {{ strand.number }}">{% endif %}
     <table>
         <thead>
             <tr>
-                <th>&lambda; (nm)</th>
-                <th>Direzione</th>
-                <th>Misurato (dB)</th>
-                <th>Teorico (dB)</th>
-                <th>Esito</th>
+                <th>{{ t.wavelength }}</th>
+                <th>{{ t.direction }}</th>
+                <th>{{ t.measured }}</th>
+                <th>{{ t.theoretical }}</th>
+                <th>{{ t.outcome }}</th>
             </tr>
         </thead>
         <tbody>
             {% for m in strand.measurements.all %}
             <tr>
                 <td>{{ m.wavelength_nm }}</td>
-                <td>{{ m.get_direction_display }}</td>
+                <td>{{ m.direction_label_text }}</td>
                 <td>{% if m.measured_db is not None %}{{ m.measured_db }}{% else %}&mdash;{% endif %}</td>
                 <td>{{ m.theoretical_db|floatformat:2 }}</td>
                 <td>
                     {% if m.is_plausible is None %}
-                        <span class="badge badge-pending">In attesa</span>
+                        <span class="badge badge-pending">{{ t.pending }}</span>
                     {% elif m.is_plausible %}
-                        <span class="badge badge-ok">Verificato</span>
+                        <span class="badge badge-ok">{{ t.verified }}</span>
                     {% else %}
-                        <span class="badge badge-warn">Da verificare</span>
+                        <span class="badge badge-warn">{{ t.to_verify }}</span>
                     {% endif %}
                 </td>
             </tr>
@@ -153,8 +163,7 @@
 {% endfor %}
 
 <p class="footer">
-    Valori teorici stimati con coefficienti tipici (ITU-T G.652/G.657, IEC 60793, prassi TIA-568): a scopo di verifica
-    di plausibilità, non sostituiscono le specifiche di capitolato del progetto.
+    {{ t.footer }}
 </p>
 
 </body>

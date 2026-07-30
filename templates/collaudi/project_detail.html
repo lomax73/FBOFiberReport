@@ -8,7 +8,10 @@
     <div>
         <h1>{{ project.name }}</h1>
         <p style="color:#64748b; margin:0;">{{ project.address }}</p>
-        {% if project.cliente %}<p style="color:#64748b; margin:0;">Cliente: {{ project.cliente }}</p>{% endif %}
+        {% if project.cliente %}
+        <p style="color:#64748b; margin:0.75rem 0 0;">{{ project.cliente.ragione_sociale }}</p>
+        {% if project.cliente.full_address %}<p style="color:#64748b; margin:0;">{{ project.cliente.full_address }}</p>{% endif %}
+        {% endif %}
     </div>
     <div style="display:flex; gap:0.6rem; flex-wrap:wrap;">
         <a class="btn btn-secondary" href="{% url 'project-update' project.pk %}">Modifica progetto</a>
@@ -29,6 +32,7 @@
 
 <div class="card" style="font-size:0.9rem; color:#64748b;">
     Tolleranza di plausibilità: <strong style="color:var(--ink);">{{ project.tolerance_percent }}%</strong>
+    &middot; Lingua del report: <strong style="color:var(--ink);">{{ project.get_report_language_display }}</strong>
 </div>
 
 {% if topology_svg %}

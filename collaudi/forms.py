@@ -10,7 +10,7 @@ class ProjectForm(forms.ModelForm):
 
     class Meta:
         model = Project
-        fields = ['name', 'address', 'logo', 'tolerance_percent']
+        fields = ['name', 'address', 'logo', 'tolerance_percent', 'report_language']
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)

@@ -11,7 +11,7 @@ from django.utils.text import slugify
 from django.views.generic import CreateView, DeleteView, DetailView, ListView, TemplateView, UpdateView
 from weasyprint import HTML
 
-from . import portal_client, services
+from . import portal_client, report_i18n, services
 from .forms import FiberMeasurementFormSet, FiberStrandForm, FiberTestForm, ProjectForm
 from .models import FiberStrand, FiberTest, Project
 
@@ -33,6 +33,13 @@ class ClienteInfo:
 
     def __str__(self):
         return self.ragione_sociale
+
+    def full_address(self):
+        """Indirizzo completo su un'unica riga: via, CAP città (provincia)."""
+        citta_part = ' '.join(part for part in [self.cap, self.citta] if part)
+        if citta_part and self.provincia:
+            citta_part = f'{citta_part} ({self.provincia})'
+        return ', '.join(part for part in [self.indirizzo, citta_part] if part)
 
 
 def _attach_clienti(projects):
@@ -211,13 +218,30 @@ def project_report_pdf(request, pk):
     _attach_clienti([project])
     fiber_tests = list(project.fiber_tests.prefetch_related('strands__measurements'))
     logo_uri = Path(project.logo.path).as_uri() if project.logo else None
+    lang = project.report_language
+    t = report_i18n.strings(lang)
+    now = timezone.localtime()
+
+    for test in fiber_tests:
+        test.fiber_type_label_text = test.fiber_type_label(lang)
+        test.splice_type_label_text = test.splice_type_label(lang)
+        test.connector_type_label_text = test.connector_type_label(lang)
+        for strand in test.strands.all():
+            strand.direction_mode_label_text = strand.direction_mode_label(lang)
+            for measurement in strand.measurements.all():
+                measurement.direction_label_text = measurement.direction_label(lang)
+
     html_string = render_to_string('collaudi/report_pdf.html', {
         'project': project,
         'fiber_tests': fiber_tests,
         'topology_svg': services.build_topology_svg(project, fiber_tests),
         'logo_uri': logo_uri,
-        'now': timezone.localtime(),
+        'now': now,
         'request': request,
+        'lang': lang,
+        't': t,
+        'generated_text': t['generated_on'].format(date=now.strftime('%d/%m/%Y'), time=now.strftime('%H:%M')),
+        'tolerance_text': t['tolerance'].format(value=project.tolerance_percent),
     })
     pdf_bytes = HTML(string=html_string, base_url=request.build_absolute_uri('/')).write_pdf()
 
