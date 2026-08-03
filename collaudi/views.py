@@ -246,6 +246,6 @@ def project_report_pdf(request, pk):
     pdf_bytes = HTML(string=html_string, base_url=request.build_absolute_uri('/')).write_pdf()
 
     response = HttpResponse(pdf_bytes, content_type='application/pdf')
-    filename = f'report-{slugify(project.name)}.pdf'
+    filename = f'report-{slugify(project.name)}_{lang.upper()}.pdf'
     response['Content-Disposition'] = f'attachment; filename="{filename}"'
     return response

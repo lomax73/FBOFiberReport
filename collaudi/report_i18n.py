@@ -59,6 +59,34 @@ STRINGS = {
             'specifications.'
         ),
     },
+    'de': {
+        'generated_on': 'Bericht erstellt am {date} um {time} Uhr',
+        'client': 'Kunde',
+        'tolerance': 'Plausibilitätstoleranz: {value}%',
+        'topology': 'Netzwerktopologie',
+        'fiber_type': 'Fasertyp',
+        'length': 'Streckenlänge',
+        'test_datetime': 'Datum/Uhrzeit der Messung',
+        'splices': 'Spleiße',
+        'connectors': 'Steckverbinder',
+        'fiber_count': 'Anzahl Fasern',
+        'panel_number': 'Paneel-Nr.',
+        'fiber': 'Faser',
+        'position': 'Position',
+        'wavelength': 'λ (nm)',
+        'direction': 'Richtung',
+        'measured': 'Gemessen (dB)',
+        'theoretical': 'Theoretisch (dB)',
+        'outcome': 'Ergebnis',
+        'pending': 'Ausstehend',
+        'verified': 'Verifiziert',
+        'to_verify': 'Zu überprüfen',
+        'footer': (
+            'Theoretische Werte geschätzt anhand typischer Koeffizienten (ITU-T G.652/G.657, IEC 60793, '
+            'TIA-568-Praxis): dienen nur der Plausibilitätsprüfung und ersetzen nicht die '
+            'Projektspezifikationen.'
+        ),
+    },
 }
 
 

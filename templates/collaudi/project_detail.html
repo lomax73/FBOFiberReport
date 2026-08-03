@@ -48,7 +48,10 @@
 <div class="card">
     <div style="display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:0.5rem;">
         <div>
-            <strong>{{ test.start_point }} → {{ test.end_point }}</strong>
+            <strong>
+                {{ test.start_point }}{% if test.start_position %} <span style="font-weight:normal; color:#94a3b8; font-size:0.8em;">({{ test.start_position }})</span>{% endif %}
+                → {{ test.end_point }}{% if test.end_position %} <span style="font-weight:normal; color:#94a3b8; font-size:0.8em;">({{ test.end_position }})</span>{% endif %}
+            </strong>
             <div style="font-size:0.85rem; color:#64748b;">
                 {{ test.get_fiber_type_display }} · {{ test.length_value }} {{ test.length_unit }} ·
                 {{ test.fiber_count }} {% if test.fiber_count == 1 %}fibra{% else %}fibre{% endif %} ·

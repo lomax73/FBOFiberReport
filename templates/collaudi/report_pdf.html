@@ -111,7 +111,11 @@
 
 {% for test in fiber_tests %}
 <div class="test-block">
-    <p class="test-title">{{ test.start_point }} &rarr; {{ test.end_point }}</p>
+    <p class="test-title">
+        {{ test.start_point }}{% if test.start_position %} <span style="font-size:8pt; font-weight:normal; color:#94a3b8;">({{ test.start_position }})</span>{% endif %}
+        &rarr;
+        {{ test.end_point }}{% if test.end_position %} <span style="font-size:8pt; font-weight:normal; color:#94a3b8;">({{ test.end_position }})</span>{% endif %}
+    </p>
     <div class="test-meta">
         <div>{{ t.fiber_type }}: <strong>{{ test.fiber_type_label_text }}</strong></div>
         <div>{{ t.length }}: <strong>{{ test.length_value }} {{ test.length_unit }}</strong></div>

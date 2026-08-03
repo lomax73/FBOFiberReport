@@ -50,7 +50,7 @@ class FiberTestForm(forms.ModelForm):
     class Meta:
         model = FiberTest
         fields = [
-            'start_point', 'end_point', 'panel_number', 'fiber_type',
+            'start_point', 'start_position', 'end_point', 'end_position', 'panel_number', 'fiber_type',
             'length_value', 'length_unit',
             'splice_type', 'splice_count',
             'connector_type', 'connector_count',

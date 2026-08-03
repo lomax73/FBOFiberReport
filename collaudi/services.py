@@ -6,6 +6,7 @@ prassi TIA-568 — stime di massima, non sostituiscono la misura reale).
 """
 
 from decimal import Decimal
+from html import escape
 
 import graphviz
 
@@ -13,55 +14,76 @@ FIBER_TYPES = {
     'sm_g652d': {
         'label': 'Monomodale G.652D',
         'label_en': 'Single-mode G.652D',
+        'label_de': 'Singlemode G.652D',
         'wavelengths': {1310: Decimal('0.35'), 1550: Decimal('0.22'), 1625: Decimal('0.24')},
     },
     'sm_g657': {
         'label': 'Monomodale G.657 A/B',
         'label_en': 'Single-mode G.657 A/B',
+        'label_de': 'Singlemode G.657 A/B',
         'wavelengths': {1310: Decimal('0.35'), 1550: Decimal('0.22'), 1625: Decimal('0.24')},
     },
     'mm_om1': {
         'label': 'Multimodale OM1 (62,5/125)',
         'label_en': 'Multi-mode OM1 (62.5/125)',
+        'label_de': 'Multimode OM1 (62,5/125)',
         'wavelengths': {850: Decimal('3.5'), 1300: Decimal('1.5')},
     },
     'mm_om2': {
         'label': 'Multimodale OM2 (50/125)',
         'label_en': 'Multi-mode OM2 (50/125)',
+        'label_de': 'Multimode OM2 (50/125)',
         'wavelengths': {850: Decimal('3.5'), 1300: Decimal('1.5')},
     },
     'mm_om3': {
         'label': 'Multimodale OM3 (50/125 laser-ott.)',
         'label_en': 'Multi-mode OM3 (50/125 laser-optimized)',
+        'label_de': 'Multimode OM3 (50/125 laseroptimiert)',
         'wavelengths': {850: Decimal('3.0'), 1300: Decimal('1.0')},
     },
     'mm_om45': {
         'label': 'Multimodale OM4/OM5 (50/125 laser-ott.)',
         'label_en': 'Multi-mode OM4/OM5 (50/125 laser-optimized)',
+        'label_de': 'Multimode OM4/OM5 (50/125 laseroptimiert)',
         'wavelengths': {850: Decimal('3.0'), 1300: Decimal('1.0')},
     },
 }
 
 SPLICE_TYPES = {
-    'fusion': {'label': 'Fusione', 'label_en': 'Fusion', 'loss': Decimal('0.10')},
-    'mechanical': {'label': 'Meccanica', 'label_en': 'Mechanical', 'loss': Decimal('0.30')},
+    'fusion': {'label': 'Fusione', 'label_en': 'Fusion', 'label_de': 'Fusionsspleiß', 'loss': Decimal('0.10')},
+    'mechanical': {'label': 'Meccanica', 'label_en': 'Mechanical', 'label_de': 'Mechanisch', 'loss': Decimal('0.30')},
 }
 
 CONNECTOR_TYPES = {
-    'factory': {'label': 'Connettorizzato in fabbrica (pigtail)', 'label_en': 'Factory-terminated (pigtail)', 'loss': Decimal('0.30')},
-    'field': {'label': 'Terminato in campo', 'label_en': 'Field-terminated', 'loss': Decimal('0.50')},
-    'generic': {'label': 'Generico / da capitolato', 'label_en': 'Generic / per specification', 'loss': Decimal('0.50')},
+    'factory': {
+        'label': 'Connettorizzato in fabbrica (pigtail)',
+        'label_en': 'Factory-terminated (pigtail)',
+        'label_de': 'Werkskonfektioniert (Pigtail)',
+        'loss': Decimal('0.30'),
+    },
+    'field': {
+        'label': 'Terminato in campo',
+        'label_en': 'Field-terminated',
+        'label_de': 'Vor-Ort-konfektioniert',
+        'loss': Decimal('0.50'),
+    },
+    'generic': {
+        'label': 'Generico / da capitolato',
+        'label_en': 'Generic / per specification',
+        'label_de': 'Allgemein / laut Leistungsverzeichnis',
+        'loss': Decimal('0.50'),
+    },
 }
 
 DIRECTION_LABELS = {
-    'A_B': {'it': 'A → B', 'en': 'A → B'},
-    'B_A': {'it': 'B → A', 'en': 'B → A'},
+    'A_B': {'it': 'A → B', 'en': 'A → B', 'de': 'A → B'},
+    'B_A': {'it': 'B → A', 'en': 'B → A', 'de': 'B → A'},
 }
 
 DIRECTION_MODE_LABELS = {
-    'both': {'it': 'Entrambe le direzioni', 'en': 'Both directions'},
-    'a_to_b': {'it': 'Solo A → B', 'en': 'A → B only'},
-    'b_to_a': {'it': 'Solo B → A', 'en': 'B → A only'},
+    'both': {'it': 'Entrambe le direzioni', 'en': 'Both directions', 'de': 'Beide Richtungen'},
+    'a_to_b': {'it': 'Solo A → B', 'en': 'A → B only', 'de': 'Nur A → B'},
+    'b_to_a': {'it': 'Solo B → A', 'en': 'B → A only', 'de': 'Nur B → A'},
 }
 
 
@@ -96,8 +118,8 @@ def fiber_type_wavelength_map():
 
 def _localized_label(mapping, key, lang):
     entry = mapping[key]
-    if lang == 'en':
-        return entry.get('label_en', entry['label'])
+    if lang in ('en', 'de'):
+        return entry.get(f'label_{lang}', entry['label'])
     return entry['label']
 
 
@@ -163,12 +185,29 @@ def build_topology_svg(project, fiber_tests):
     graph.attr('edge', fontname='Helvetica', fontsize='10', penwidth='2')
     graph.attr(fontname='Helvetica', nodesep='0.7', ranksep='0.9')
 
+    positions = {}
+    for test in fiber_tests:
+        if test.start_position:
+            positions.setdefault(test.start_point, test.start_position)
+        if test.end_position:
+            positions.setdefault(test.end_point, test.end_position)
+
     points = set()
     for test in fiber_tests:
         points.add(test.start_point)
         points.add(test.end_point)
     for point in points:
-        graph.node(point, point)
+        position = positions.get(point)
+        if position:
+            label = (
+                '<<TABLE BORDER="0" CELLBORDER="0" CELLSPACING="0">'
+                f'<TR><TD>{escape(point)}</TD></TR>'
+                f'<TR><TD><FONT POINT-SIZE="10" COLOR="#6b7280">{escape(position)}</FONT></TD></TR>'
+                '</TABLE>>'
+            )
+            graph.node(point, label=label)
+        else:
+            graph.node(point, point)
 
     for test in fiber_tests:
         fiber_label = '1 fibra' if test.fiber_count == 1 else f'{test.fiber_count} fibre'

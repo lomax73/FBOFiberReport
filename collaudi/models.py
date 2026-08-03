@@ -8,7 +8,7 @@ from . import services
 
 
 class Project(models.Model):
-    REPORT_LANGUAGE_CHOICES = [('it', 'Italiano'), ('en', 'English')]
+    REPORT_LANGUAGE_CHOICES = [('it', 'Italiano'), ('en', 'English'), ('de', 'Deutsch')]
 
     name = models.CharField('Nome cantiere', max_length=200)
     address = models.CharField('Indirizzo', max_length=300)
@@ -40,7 +40,9 @@ class FiberTest(models.Model):
 
     project = models.ForeignKey(Project, on_delete=models.CASCADE, related_name='fiber_tests')
     start_point = models.CharField('Punto di partenza', max_length=200)
+    start_position = models.CharField('Posizione punto di partenza', max_length=200, blank=True)
     end_point = models.CharField('Punto di arrivo', max_length=200)
+    end_position = models.CharField('Posizione punto di arrivo', max_length=200, blank=True)
     fiber_type = models.CharField('Tipo di fibra', max_length=20, choices=services.fiber_type_choices())
     length_value = models.DecimalField('Lunghezza tratta', max_digits=10, decimal_places=3)
     length_unit = models.CharField('Unità di lunghezza', max_length=2, choices=LENGTH_UNIT_CHOICES, default='km')
