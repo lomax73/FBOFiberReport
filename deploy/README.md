@@ -38,6 +38,9 @@ sudo -u fiberreport python3 -m venv venv
 sudo -u fiberreport venv/bin/pip install -r requirements.txt
 
 cp .env.example .env   # poi valorizzare DJANGO_SECRET_KEY, DJANGO_ALLOWED_HOSTS
+                        # DJANGO_DEBUG=false — .env.example lo lascia a "true", NON dimenticarlo:
+                        # con DEBUG=True qualunque eccezione espone tutte le variabili
+                        # d'ambiente (SECRET_KEY, INTERNAL_API_TOKEN, PORTAL_API_TOKEN)
 sudo -u fiberreport venv/bin/python manage.py migrate
 sudo -u fiberreport venv/bin/python manage.py collectstatic --noinput
 sudo -u fiberreport venv/bin/python manage.py createsuperuser
