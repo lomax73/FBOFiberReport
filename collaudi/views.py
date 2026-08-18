@@ -1,6 +1,7 @@
 from dataclasses import dataclass
 from pathlib import Path
 
+from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404, redirect, render
@@ -164,6 +165,7 @@ class FiberTestDeleteView(LoginRequiredMixin, DeleteView):
         return reverse('project-detail', args=[self.object.project_id])
 
 
+@login_required
 def strand_update(request, pk):
     strand = get_object_or_404(FiberStrand, pk=pk)
     fiber_test = strand.fiber_test
@@ -183,6 +185,7 @@ def strand_update(request, pk):
     })
 
 
+@login_required
 def fibertest_measurements(request, pk):
     fiber_test = get_object_or_404(FiberTest, pk=pk)
     strands = list(fiber_test.strands.prefetch_related('measurements').all())
@@ -213,6 +216,7 @@ def fibertest_measurements(request, pk):
     })
 
 
+@login_required
 def project_report_pdf(request, pk):
     project = get_object_or_404(Project, pk=pk)
     _attach_clienti([project])
